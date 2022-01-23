@@ -1,17 +1,5 @@
 from todo.model import Task, List
 from todo import session
-import datetime
-
-
-def date_parser(date):
-    today = datetime.date.today()
-    week_shift = 0
-    if date.startswith('next'):
-        week_shift = 7
-        date = date[5:]
-    days = {'monday': 0, 'tuesday': 1, 'friday': 4, 'wednesday': 2, 'thursday': 3, 'saturday': 5, 'sunday': 6}
-    parsed_date = today + datetime.timedelta(week_shift + (days[date]-today.weekday()) % 7)
-    return parsed_date
 
 
 def add_task(name, list_name, deadline=None, priority=0, notes=None):
@@ -53,17 +41,18 @@ def rename_list(list_name, new_name):
     session.commit()
 
 
-def list_info(lst_name):
-    lst = session.query(List).filter(List.name == lst_name).first()
-    tasks = session.query(Task).join(List).filter(List.name == lst_name).all()
-    print(f'{lst.name}\n')
-    for task in tasks:
-        check = '✓' if task.done else ' '
-        print(f'[{check}]  {task.name}')
+def list_info(list_name):
+    tasks = session.query(Task).join(List).filter(List.name == list_name).all()
+    info = [[task.name, task.done, task.deadline, task.priority, task.notes] for task in tasks]
+    return info
 
 
 def task_info(name, lst):
     task = session.query(Task).join(List, Task.list).filter(List.name == lst and Task.name == name).first()
-    return task
+    info = (task.done, task.deadline, task.priority, task.notes)
+    return info
 
-# TODO: all interactions with database
+
+def count_done(list_name):
+    count = session.query(Task).join(List).filter(List.name == list_name and Task.done).count()
+    return count

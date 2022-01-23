@@ -1,7 +1,11 @@
 import argparse
 from todo.data_manager import add_list, add_task, remove_task, remove_list, edit_task, rename_list, list_info
+from todo.tui import show_list
+
 parser = argparse.ArgumentParser(description='simple to-do list')
 subparser = parser.add_subparsers(dest='command')
+
+# TODO add help to commands
 
 # commands
 add = subparser.add_parser('add', help='add a new task or list')
@@ -25,8 +29,9 @@ def parse_add(args):
             add_task(task, args.LIST, deadline, priority, notes)
 
 
-add.add_argument('LIST', type=str)
-add.add_argument('TASKS', type=str, nargs='*')
+add.add_argument('LIST', type=str, help='list name')
+add.add_argument('TASKS', type=str, nargs='*',
+                 help='names of tasks to be added. If empty a new list will be added instead')
 add.add_argument('--deadline', type=str)
 add.add_argument('--priority', type=int)
 add.add_argument('--notes', type=str)
@@ -92,16 +97,22 @@ uncheck.set_defaults(func=parse_uncheck)
 # ls
 def parse_ls(args):
     if not args.LIST:
-        # display functon?
+        # TODO: display function here
         raise 'Not implemented'
     else:
-        list_info(args.LIST[0])
+        show_list(args.LIST[0])
 
 
 ls.add_argument('LIST', type=str, nargs='*')
 ls.set_defaults(func=parse_ls)
 
+
 # show
+def parse_show(args):
+    # TODO: display function here
+    raise 'pls dont shout'
+
+
 show.add_argument('LIST', type=str)
 show.add_argument('TASK', type=str)
 show.set_defaults(func=show)
@@ -109,3 +120,4 @@ show.set_defaults(func=show)
 args = parser.parse_args()
 print(args)
 args.func(args)
+
