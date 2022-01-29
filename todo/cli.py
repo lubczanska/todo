@@ -1,7 +1,6 @@
 import argparse
-from todo.data_manager import add_list, add_task, remove_task, remove_list, edit_task, rename_list, list_info
-from todo.tui import show_list
-
+from todo.data_manager import add_list, add_task, remove_task, remove_list, edit_task, list_list, rename_list, list_info
+from todo.tui import show_list, show_task, show_main
 parser = argparse.ArgumentParser(description='simple to-do list')
 subparser = parser.add_subparsers(dest='command')
 
@@ -57,7 +56,8 @@ def parse_edit(args):
     if not args.TASKS:
         rename_list(args.LIST, args.name)
     else:
-        changes = {arg: args[arg] for arg in ['name', 'list', 'deadline', 'priority', 'notes'] if arg}
+        args_vars = vars(args)
+        changes = {arg: args_vars[arg] for arg in ['name', 'list', 'deadline', 'priority', 'notes'] if args_vars[arg]}
         for task in args.TASKS:
             edit_task(task, args.LIST, changes)
 
@@ -97,27 +97,37 @@ uncheck.set_defaults(func=parse_uncheck)
 # ls
 def parse_ls(args):
     if not args.LIST:
+        if args.txt:
+            for item in list_list():
+                print(item)
+        else:
         # TODO: display function here
-        raise 'Not implemented'
+            raise 'Not implemented'
     else:
-        show_list(args.LIST[0])
+        if args.txt:
+            for item in list_info(args.LIST[0]):
+                print(item)
+        else:
+            show_list(args.LIST[0])
 
 
 ls.add_argument('LIST', type=str, nargs='*')
+ls.add_argument('--txt')
 ls.set_defaults(func=parse_ls)
 
 
 # show
 def parse_show(args):
-    # TODO: display function here
-    raise 'pls dont shout'
+    show_task(args.TASK, args.LIST)
 
 
 show.add_argument('LIST', type=str)
 show.add_argument('TASK', type=str)
-show.set_defaults(func=show)
+show.set_defaults(func=parse_show)
 
 args = parser.parse_args()
-print(args)
-args.func(args)
-
+# print(args)
+if args.command:
+    args.func(args)
+else:
+    show_main()
