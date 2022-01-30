@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import todo.cli
+from todo.cli import main_controller
 
-#if __name__ == '__main__':
-    # main_controller() ?
+
+if __name__ == '__main__':
+    main_controller()
