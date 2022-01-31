@@ -1,7 +1,5 @@
 import curses
 
-import todo.exception as exception
-import todo.tui.tui as tui
 import todo.cli as cli
 
 

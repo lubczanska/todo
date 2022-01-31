@@ -99,14 +99,33 @@ def count_done(list_name: str):
     return count
 
 
+def welcome_tasks():
+    tasks = session.query(Task).all()
+    missed = 0
+    today = 0
+    this_week = 0
+    for task in tasks:
+        if task.done:
+            continue
+        left = util.time_until_date(task.deadline)
+        if left < 0:
+            missed += 1
+        elif left == 0:
+            today += 1
+        elif left < 7:
+            this_week += 1
+    return missed, today, this_week
+
+
 def session_quit():
     session.close()
 
 
-def manage_deadlines():
+def manage_deadlines(quiet):
     """
     create lists of missed tasks and tasks requiring notification
     and move deadline of all missed repeating tasks
+    :param quiet: only repeating tasks are managed, nothing else is modified, nothing is returned
     :return:
     """
     tasks = session.query(Task).all()
@@ -114,7 +133,7 @@ def manage_deadlines():
     notify = []  # tuples of tasks with due notifications and days left until deadline
     for task in tasks:
         if util.time_to_notify(task.notify):
-            left = util.time_to_deadline(task.deadline)
+            left = util.time_until_date(task.deadline)
             if left < 0:
                 if task.repeat:
                     # repeating tasks are edited to move the deadline and uncheck them
@@ -125,11 +144,13 @@ def manage_deadlines():
                     if not util.time_to_notify(task.notify):
                         # important or daily repeated tasks might still need a notification
                         continue
-                else:
+                elif not quiet:
                     task.notify = None
                     if not task.done:
                         missed.append(task)
                     continue
+            if quiet:
+                continue
             notify.append((task, left))
             if task.priority == 2:
                 task.priority = 1

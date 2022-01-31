@@ -18,9 +18,10 @@ def date_add_days(delta: int, date: datetime = datetime.datetime.today()) -> dat
     return date + datetime.timedelta(days=delta)
 
 
-def time_to_deadline(date: datetime) -> int:
+def time_until_date(date: datetime) -> int:
+    """Returns days until date"""
     if date is None:
-        return 10000
+        return 1000000000  # maybe not the smartest way to do it, but whatever
     today = datetime.datetime.today()
     delta = (date - today).days
     return delta
@@ -55,18 +56,28 @@ def date_parser(date: str) -> datetime:
     return parsed_date
 
 
-def date_pprinter(date: datetime) -> (str, bool):
+def date_pprinter(date: datetime) -> (str, int):
+    """
+    Returns pretty string of date.
+    2nd element of returned tuple meaning:
+    0 - missed
+    1 - not missed
+    2 - today
+    """
     today = datetime.datetime.today()
     delta = (date - today).days
     if delta == 0:
-        return 'today', False
+        return 'today', 2
     days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
     if delta == -1:
-        return 'yesterday', True
+        return 'yesterday', 1
     elif 0 < delta <= 1:
-        return 'tomorrow', False
+        return 'tomorrow', 0
     elif 7 >= delta > 0:
-        return days[date.weekday()], False
+        return days[date.weekday()], 0
     else:
         missed = delta < 0
-        return date.strftime('%d/%m/%Y'), missed
+        if missed:
+            return f'{-delta} days ago', 1
+        else:
+            return date.strftime('%d %b %Y'), 0

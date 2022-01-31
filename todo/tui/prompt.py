@@ -2,10 +2,6 @@ import curses
 
 import todo.exception as exception
 import todo.tui.tui as tui
-import locale
-
-locale.setlocale(locale.LC_ALL, '')
-code = locale.getpreferredencoding()
 
 
 def print_prompt(stdscr, prompt=':'):
@@ -112,7 +108,5 @@ def regular_prompt(stdscr, message):
     """
     stdscr.erase()
     h, w = stdscr.getmaxyx()
-    # stdscr.attron(curses.A_BOLD)
     stdscr.addstr(0, 0, message)
-    # stdscr.attroff(curses.A_BOLD)
     stdscr.refresh()

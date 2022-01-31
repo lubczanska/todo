@@ -3,14 +3,13 @@ import shlex
 
 import todo.exception as exception
 import todo.tui.tui as tui
-from todo.data_controllers import add_list, add_task, remove_task, remove_list, edit_task, lists_info, rename_list
+from todo.data_controllers import add_list, add_task, remove_task, remove_list, edit_task, list_info, lists_info, rename_list
 from todo.startup import startup
 from todo.util import date_parser
 
 master_parser = argparse.ArgumentParser(add_help=False)
 subparser = master_parser.add_subparsers(dest='command')
 
-# TODO add help to commands
 
 # commands
 add = subparser.add_parser('add', help='add new list or tasks')
@@ -18,7 +17,7 @@ rm = subparser.add_parser('rm', help='remove list or tasks')
 edit = subparser.add_parser('edit', help='edit list/task details')
 check = subparser.add_parser('check', help='mark task as completed')
 uncheck = subparser.add_parser('uncheck', help='mark task as not completed')
-ls = subparser.add_parser('ls', help='list all tasks in a list')
+ls = subparser.add_parser('ls', help='display all tasks in a list in tui mode')
 show = subparser.add_parser('show', help='display task details')
 
 
@@ -37,12 +36,20 @@ def parse_add(args):
             add_task(task, args.LIST, deadline, priority, notes, repeat)
 
 
-add.add_argument('LIST', type=str, help='list name')
+add.add_argument('LIST', type=str,
+                 help="name of the list, will be created if it doesn't exist yet")
 add.add_argument('TASKS', type=str, nargs='*',
-                 help='names of tasks to be added. If empty a new list will be added instead')
-add.add_argument('--deadline', type=str)
-add.add_argument('--priority', type=int)
-add.add_argument('--repeat', type=int)
+                 help='names of tasks to be added, if no names are given an empty list will be added')
+add.add_argument('--deadline', type=str,
+                 help="possible values: 'today', 'tomorrow', day of the week, date in dd/mm/YYYY format")
+add.add_argument('--priority', type=int,
+                 help='controls the amount of notifications (if > 0 a deadline is needed):'
+                      ' 0) none'
+                      ' 1) 1 day before deadline'
+                      ' 2) a week before deadline'
+                      ' 3) every time the app is opened')
+add.add_argument('--repeat', type=int,
+                 help='the task will repeat REPEAT days after deadline (deadline needed)')
 add.add_argument('--notes', type=str)
 add.set_defaults(func=parse_add)
 
@@ -73,12 +80,25 @@ def parse_edit(args):
             edit_task(task, args.LIST, changes)
 
 
-edit.add_argument('LIST', type=str)
-edit.add_argument('TASKS', type=str, nargs='*')
-edit.add_argument('--name', type=str)
-edit.add_argument('--list', type=str)
-edit.add_argument('--deadline', type=str)
-edit.add_argument('--priority', type=int)
+edit.add_argument('LIST', type=str,
+                  help="name of the list")
+edit.add_argument('TASKS', type=str, nargs='*',
+                  help='names of tasks to receive changes, if no names are given the list can be renamed'
+                       'and all the other flags are ignored')
+edit.add_argument('--name', type=str,
+                  help='new name for list or tasks')
+edit.add_argument('--list', type=str,
+                  help='name of list where tasks should be moved')
+edit.add_argument('--deadline', type=str,
+                  help="possible values: 'today', 'tomorrow', day of the week, date in dd/mm/YYYY format")
+edit.add_argument('--priority', type=int,
+                  help='controls the amount of notifications (if > 0 a deadline is needed):'
+                       ' 0) none'
+                       ' 1) 1 day before deadline'
+                       ' 2) a week before deadline'
+                       ' 3) every time the app is opened')
+edit.add_argument('--repeat', type=int,
+                  help='the task will repeat REPEAT days after deadline (deadline needed)')
 edit.add_argument('--notes', type=str)
 edit.set_defaults(func=parse_edit)
 
@@ -114,17 +134,23 @@ def parse_ls(args):
         tui.run('list', args.LIST)
 
 
-ls.add_argument('LIST', type=str, nargs='?')
+ls.add_argument('LIST', type=str, nargs='?',
+                help='name of list to display, if no list is given all lists will be printed instead')
 ls.set_defaults(func=parse_ls)
 
 
 # show
 def parse_show(args):
-    tui.run('task', args.LIST, args.TASK)
+    if not args.TASK:
+        for task in list_info(args.LIST):
+            print(task.name)
+    else:
+        tui.run('task', args.LIST, args.TASK)
 
 
 show.add_argument('LIST', type=str)
-show.add_argument('TASK', type=str)
+show.add_argument('TASK', type=str, nargs='?',
+                  help='name of task to display, if no list is given all task on LIST will be printed instead')
 show.set_defaults(func=parse_show)
 
 
