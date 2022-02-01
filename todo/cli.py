@@ -3,12 +3,12 @@ import shlex
 
 import todo.exception as exception
 import todo.tui.tui as tui
-from todo.data_controllers import add_list, add_task, remove_task, remove_list, edit_task, list_info, lists_info, rename_list
+import todo.data_controllers as data
 from todo.startup import startup
 from todo.util import date_parser
 
 master_parser = argparse.ArgumentParser(add_help=False)
-subparser = master_parser.add_subparsers(dest='command')
+subparser = master_parser.add_subparsers(dest='command', title='commands')
 
 
 # commands
@@ -24,7 +24,7 @@ show = subparser.add_parser('show', exit_on_error=False, help='display task deta
 # add
 def parse_add(args):
     if not args.TASKS:
-        add_list(args.LIST)
+        data.add_list(args.LIST)
     else:
         deadline = date_parser(args.deadline) if args.deadline else None
         priority = args.priority if args.priority else 0
@@ -32,7 +32,7 @@ def parse_add(args):
         notes = args.notes if args.notes else None
         for task in args.TASKS:
             try:
-                add_task(task, args.LIST, deadline, notes, repeat, priority)
+                data.add_task(task, args.LIST, deadline, notes, repeat, priority)
             except Exception:
                 raise
 
@@ -58,10 +58,10 @@ add.set_defaults(func=parse_add)
 # rm
 def parse_rm(args):
     if not args.TASKS:
-        remove_list(args.LIST)
+        data.remove_list(args.LIST)
     else:
         for task in args.TASKS:
-            remove_task(task, args.LIST)
+            data.remove_task(task, args.LIST)
 
 
 rm.add_argument('LIST', type=str)
@@ -72,13 +72,14 @@ rm.set_defaults(func=parse_rm)
 # edit
 def parse_edit(args):
     if not args.TASKS:
-        rename_list(args.LIST, args.name)
+        data.rename_list(args.LIST, args.name)
     else:
         args_vars = vars(args)
-        changes = {arg: args_vars[arg] for arg in ['name', 'list', 'priority', 'notes'] if args_vars[arg]}
-        changes['deadline'] = date_parser(args.deadline) if args.deadline else None
+        changes = {arg: args_vars[arg] for arg in ['name', 'list', 'priority', 'notes', 'repeat'] if args_vars[arg]}
+        if args.deadline:
+            changes['deadline'] = date_parser(args.deadline)
         for task in args.TASKS:
-            edit_task(task, args.LIST, changes)
+            data.edit_task(task, args.LIST, changes)
 
 
 edit.add_argument('LIST', type=str,
@@ -107,7 +108,7 @@ edit.set_defaults(func=parse_edit)
 # check
 def parse_check(args):
     for task in args.TASKS:
-        edit_task(task, args.LIST, {'done': True})
+        data.edit_task(task, args.LIST, {'done': True})
 
 
 check.add_argument('LIST', type=str)
@@ -118,7 +119,7 @@ check.set_defaults(func=parse_check)
 # uncheck
 def parse_uncheck(args):
     for task in args.TASKS:
-        edit_task(task, args.LIST, {'done': False})
+        data.edit_task(task, args.LIST, {'done': False})
 
 
 uncheck.add_argument('LIST', type=str)
@@ -130,7 +131,7 @@ uncheck.set_defaults(func=parse_uncheck)
 def parse_ls(args):
     if not args.LIST:
         # print names of all lists
-        for item in lists_info():  # returns name, # of tasks tuple
+        for item in data.lists_info():  # returns name, # of tasks tuple
             print(item[0])
     else:
         tui.run('list', args.LIST)
@@ -145,7 +146,7 @@ ls.set_defaults(func=parse_ls)
 def parse_show(args):
     if not args.TASK:
         # print names of all tasks in list
-        for task in list_info(args.LIST):
+        for task in data.list_info(args.LIST):
             print(task.name)
     else:
         tui.run('task', args.LIST, args.TASK)
@@ -158,7 +159,8 @@ show.set_defaults(func=parse_show)
 
 
 cli_parser = argparse.ArgumentParser(description='A simple to-do list app',
-                                     epilog='If no command is specified tui mode will be opened.\n',
+                                     epilog="If no command is specified tui mode will be opened.\n\n"
+                                            "In tui mode press ':' to enter commands",
                                      parents=[master_parser])
 cli_parser.add_argument('--quiet', '-q', action='store_true',
                         help='run tui without triggering notifications')
@@ -193,20 +195,25 @@ def main_controller():
         except (exception.DuplicateTaskError, exception.DuplicateListError, exception.NoTaskError,
                 exception.WrongDateError, exception.PriorityError) as e:
             print(e)
+        finally:
+            data.session_quit()
     else:
         startup(args.quiet)
         tui.run()
+        data.session_quit()
 
 
-def tui_controller(text):
+def tui_controller(text, list_name=None):
     try:
         args = tui_parser.parse_args(shlex.split(text))
         if args.command in [None, 'ls', 'show']:
             raise exception.IllegalCommandError
         else:
+            if args.LIST == '.' and list_name is not None:
+                args.LIST = list_name
             try:
                 args.func(args)
             except Exception:
                 raise
     except Exception as e:
-        raise exception.ParsingError(text, str(e))  # TODO: preserve message?
+        raise exception.ParsingError(text, str(e))

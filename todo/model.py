@@ -14,7 +14,7 @@ class Task(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(45), nullable=False)
-    list_id = Column(Integer, ForeignKey('list.id'))  # TODO refactor to list_id
+    list_id = Column(Integer, ForeignKey('list.id'))
     done = Column(Boolean, nullable=False, default=False)
     deadline = Column(DateTime)
     # priority setting options:
@@ -23,7 +23,7 @@ class Task(Base):
     # 2 - notify a week before deadline, then 1 day before
     # 3 - notify everytime the app is opened
     priority = Column(Integer)
-    # number of days of repeat interval TODO: change to int
+    # number of days of repeat interval
     repeat = Column(Integer, default=None)
     # notify is one three options:
     # (1)   a date of next actual notification
@@ -32,20 +32,21 @@ class Task(Base):
     # (3)   None if a 'missed' notification has been made
     notify = Column(DateTime, default=None)
     notes = Column(String(70))
-    """
+
     @validates('name')
     def validate_name(self, key, value):
-        if len(value) > 45:
-            raise ValueError
+        if value is None:
+            raise ValueError('None')
+        elif len(value) > 45:
+            raise ValueError('name too long')
         return value
 
     @validates('notes')
     def validate_name(self, key, value):
-        if len(value) > 70:
+        if value and len(value) > 70:
             raise ValueError
         return value
 
-    """
     @validates('priority')
     def validate_priority(self, key, value):
         if value not in range(4):
@@ -54,8 +55,8 @@ class Task(Base):
 
     @validates('repeat')
     def validate_repeat(self, key, value):
-        #if value <= 0:
-        #    raise ValueError
+        if value and value <= 0:
+            raise ValueError
         return value
 
     # deadline validation is done by util.date_parser
@@ -66,7 +67,7 @@ class Task(Base):
         self.deadline = deadline
         self.priority = priority
         self.notes = notes
-        self.repeat = repeat  # TODO: change when restarting db
+        self.repeat = repeat
 
     def __getitem__(self, key):
         return getattr(self, key)
@@ -80,11 +81,13 @@ class List(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(45))
-    task_ids = relationship('Task')  # TODO refactor to task_ids
+    task_ids = relationship('Task')
 
     @validates('name')
     def validate_name(self, key, value):
-        if len(value) > 45:
+        if value is None:
+            raise ValueError
+        elif len(value) > 45 or value == '.':
             raise ValueError
         return value
 

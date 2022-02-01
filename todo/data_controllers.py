@@ -74,6 +74,8 @@ def edit_task(task_name: str, list_name: str, changes):
     task = session.query(Task).join(List).filter(List.name == list_name, Task.name == task_name).first()
     if task is None:
         raise exception.NoTaskError
+    # TODO check if name is not duplicate
+    # TODO check if list exists
     for (key, value) in changes.items():
         task[key] = value
     if task.priority > 0 and task.deadline is None:
@@ -184,3 +186,7 @@ def manage_deadlines(quiet):
                 task.notify = util.date_add_days(1, task.deadline)
     session.commit()
     return missed, notify
+
+
+def is_modified(instance=None):
+    return session.dirty

@@ -1,10 +1,25 @@
 import datetime
+import os
+import pwd
+
 import todo.exception as exception
 
 
 def add_s(word: str, number: int):
     """Add s to the end of a word if necessary"""
     return word if number == 1 else word+'s'
+
+
+def get_username():
+    return pwd.getpwuid(os.getuid())[0]
+
+
+def task_info_str(task) -> tuple[str, str, tuple[str, bool], str, int]:
+    """Format task information for printing"""
+    done = '✓' if task.done else ' '
+    deadline = date_pprinter(task.deadline) if task.deadline else ('', False)
+    notes = task.notes if task.notes else ''
+    return task.name, done, deadline, notes, task.priority
 
 
 def calculate_notification(task):
@@ -28,7 +43,7 @@ def time_until_date(date: datetime) -> int:
     if date is None:
         return 1000000000  # maybe not the smartest way to do it, but whatever
     today = datetime.datetime.today()
-    delta = (date - today).days
+    delta = (date.date() - today.date()).days
     return delta
 
 
@@ -52,7 +67,10 @@ def date_parser(date: str) -> datetime:
     else:
         days = {'monday': 0, 'tuesday': 1, 'wednesday': 2, 'thursday': 3, 'friday': 4, 'saturday': 5, 'sunday': 6}
         if date in days.keys():
-            parsed_date = today + datetime.timedelta(days=(days[date]-today.weekday()) % 7)
+            shift = days[date]-today.weekday()
+            if shift == 0:
+                shift = 7
+            parsed_date = today + datetime.timedelta(days=shift)
         else:
             try:
                 parsed_date = datetime.datetime.strptime(date, '%d/%m/%Y')
@@ -78,7 +96,7 @@ def date_pprinter(date: datetime) -> (str, int):
         return 'yesterday', 1
     elif delta == 1:
         return 'tomorrow', 0
-    elif delta <= 7:
+    elif 0 < delta <= 7:
         return days[date.weekday()], 0
     else:
         missed = delta < 0
