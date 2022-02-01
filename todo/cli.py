@@ -12,13 +12,13 @@ subparser = master_parser.add_subparsers(dest='command')
 
 
 # commands
-add = subparser.add_parser('add', help='add new list or tasks')
-rm = subparser.add_parser('rm', help='remove list or tasks')
-edit = subparser.add_parser('edit', help='edit list/task details')
-check = subparser.add_parser('check', help='mark task as completed')
-uncheck = subparser.add_parser('uncheck', help='mark task as not completed')
-ls = subparser.add_parser('ls', help='display all tasks in a list in tui mode')
-show = subparser.add_parser('show', help='display task details')
+add = subparser.add_parser('add', exit_on_error=False, help='add new list or tasks')
+rm = subparser.add_parser('rm', exit_on_error=False, help='remove list or tasks')
+edit = subparser.add_parser('edit', exit_on_error=False, help='edit list/task details')
+check = subparser.add_parser('check', exit_on_error=False, help='mark task as completed')
+uncheck = subparser.add_parser('uncheck', exit_on_error=False, help='mark task as not completed')
+ls = subparser.add_parser('ls', exit_on_error=False, help='display all tasks in a list in tui mode')
+show = subparser.add_parser('show', exit_on_error=False, help='display task details')
 
 
 # add
@@ -28,12 +28,13 @@ def parse_add(args):
     else:
         deadline = date_parser(args.deadline) if args.deadline else None
         priority = args.priority if args.priority else 0
-        if (priority > 0 and deadline is None) or priority not in [0, 1, 2, 3]:
-            raise exception.PriorityError
         repeat = args.repeat if args.repeat else None
         notes = args.notes if args.notes else None
         for task in args.TASKS:
-            add_task(task, args.LIST, deadline, priority, notes, repeat)
+            try:
+                add_task(task, args.LIST, deadline, notes, repeat, priority)
+            except Exception:
+                raise
 
 
 add.add_argument('LIST', type=str,
@@ -128,6 +129,7 @@ uncheck.set_defaults(func=parse_uncheck)
 # ls
 def parse_ls(args):
     if not args.LIST:
+        # print names of all lists
         for item in lists_info():  # returns name, # of tasks tuple
             print(item[0])
     else:
@@ -142,6 +144,7 @@ ls.set_defaults(func=parse_ls)
 # show
 def parse_show(args):
     if not args.TASK:
+        # print names of all tasks in list
         for task in list_info(args.LIST):
             print(task.name)
     else:
@@ -157,13 +160,14 @@ show.set_defaults(func=parse_show)
 cli_parser = argparse.ArgumentParser(description='A simple to-do list app',
                                      epilog='If no command is specified tui mode will be opened.\n',
                                      parents=[master_parser])
-tui_parser = argparse.ArgumentParser(parents=[master_parser], exit_on_error=False)
+cli_parser.add_argument('--quiet', '-q', action='store_true',
+                        help='run tui without triggering notifications')
+tui_parser = argparse.ArgumentParser(parents=[master_parser], exit_on_error=False, add_help=False)
 
 
 def get_help(command=None) -> str:
-    if command is None:
-        return cli_parser.format_help()
-    elif command == 'add':
+    """"Return help message for tui help command"""
+    if command == 'add':
         return add.format_help()
     elif command == 'rm':
         return rm.format_help()
@@ -186,18 +190,11 @@ def main_controller():
     if args.command:
         try:
             args.func(args)
-        except exception.DuplicateTaskError:
-            print('There is already a task with this name on the list')
-        except exception.DuplicateListError:
-            print('There is already a list with this name')
-        except exception.NoTaskError:
-            print("This task or list doesn't exist")
-        except exception.WrongDateError:
-            print("A date must be on of these things: 'today','tomorrow', day of the week, date in dd/mm/yyyy format")
-        except exception.PriorityError:
-            print('Priority needs to be an integer between 0 and 3. Priority > 0 needs a deadline')
+        except (exception.DuplicateTaskError, exception.DuplicateListError, exception.NoTaskError,
+                exception.WrongDateError, exception.PriorityError) as e:
+            print(e)
     else:
-        startup()
+        startup(args.quiet)
         tui.run()
 
 
@@ -211,5 +208,5 @@ def tui_controller(text):
                 args.func(args)
             except Exception:
                 raise
-    except Exception:
-        raise
+    except Exception as e:
+        raise exception.ParsingError(text, str(e))  # TODO: preserve message?

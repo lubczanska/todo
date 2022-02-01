@@ -1,10 +1,17 @@
+from datetime import datetime
+
 from todo.model import Task, List
 from todo import session
 import todo.util as util
 import todo.exception as exception
 
 
-def add_task(task_name: str, list_name: str, deadline=None, priority=0, notes=None, repeat=None):
+def add_task(task_name: str, list_name: str, deadline: datetime | None, notes: str | None,
+             repeat: int | None, priority: int = 0):
+    """
+    Add new task to the database. Raise exception if task with task_name exists on list_name.
+    Validate priority
+    """
     list_id = session.query(List.id).filter_by(name=list_name).first()
     if list_id is not None:
         if session.query(Task).join(List).filter(Task.name == task_name, List.name == list_name).first() is not None:
@@ -14,7 +21,11 @@ def add_task(task_name: str, list_name: str, deadline=None, priority=0, notes=No
     else:
         lst = List(list_name)
         session.add(lst)
+    # assert priority > 0 => a deadline is set
+    if priority > 0 and deadline is None:
+        raise exception.PriorityError
     new_task = Task(task_name, deadline, priority, notes, repeat)
+    # create date of notification
     notify = None
     if priority == 3:
         notify = util.date_add_days(0)
@@ -25,12 +36,13 @@ def add_task(task_name: str, list_name: str, deadline=None, priority=0, notes=No
     elif deadline:
         notify = util.date_add_days(1, deadline)
     new_task.notify = notify
-    lst.tasks.append(new_task)
+    lst.task_ids.append(new_task)
     session.add(new_task)
     session.commit()
 
 
 def add_list(list_name: str):
+    """Add new list to the database. Check if name is unique"""
     if session.query(List.id).filter_by(name=list_name).first() is not None:
         raise exception.DuplicateListError
         return
@@ -40,10 +52,11 @@ def add_list(list_name: str):
 
 
 def remove_task(task_name: str, list_name: str):
+    """Check if task exists. If yes, remove from database"""
     lst = session.query(List).filter(List.name == list_name).first()
     if lst is None:
         raise exception.NoTaskError
-    session.query(Task).filter(Task.list == lst.id, Task.name == task_name).delete()
+    session.query(Task).filter(Task.list_id == lst.id, Task.name == task_name).delete()
     session.commit()
 
 
@@ -51,21 +64,26 @@ def remove_list(list_name: str):
     lst = session.query(List).filter(List.name == list_name).first()
     if lst is None:
         raise exception.NoTaskError
-    session.query(Task).filter(Task.list == lst.id).delete()
+    session.query(Task).filter(Task.list_id == lst.id).delete()
     session.query(List).filter(List.name == list_name).delete()
     session.commit()
 
 
 def edit_task(task_name: str, list_name: str, changes):
+    """Check if task exists. If yes, edit task details. Validate priority > 0 => deadline exists"""
     task = session.query(Task).join(List).filter(List.name == list_name, Task.name == task_name).first()
     if task is None:
         raise exception.NoTaskError
     for (key, value) in changes.items():
         task[key] = value
+    if task.priority > 0 and task.deadline is None:
+        # abort changes
+        raise exception.PriorityError
     session.commit()
 
 
 def rename_list(list_name: str, new_name: str):
+    """If list exists change its name to new_name"""
     lst = session.query(List).filter(List.name == list_name).first()
     if lst is None:
         raise exception.NoTaskError
@@ -74,20 +92,23 @@ def rename_list(list_name: str, new_name: str):
 
 
 def lists_info():
+    """Return info about number of all tasks and completed tasks for each list"""
     lists = session.query(List).all()
-    info = [(lst.name, len(lst.tasks), count_done(lst.name)) for lst in lists]
+    info = [(lst.name, len(lst.task_ids), count_done(lst.name)) for lst in lists]
     return info
 
 
 def list_info(list_name: str):
+    """Return information about list if it exists"""
     lst = session.query(List).filter(List.name == list_name).first()
     if lst is None:
         raise exception.NoTaskError
-    tasks = session.query(Task).filter(Task.list == lst.id).all()
+    tasks = session.query(Task).filter(Task.list_id == lst.id).all()
     return list(tasks)
 
 
 def task_info(task_name: str, list_name: str):
+    """Return task if it exists"""
     task = session.query(Task).join(List).filter(List.name == list_name, Task.name == task_name).first()
     if task is None:
         raise exception.NoTaskError
@@ -95,11 +116,13 @@ def task_info(task_name: str, list_name: str):
 
 
 def count_done(list_name: str):
+    """Count completed tasks on list_name"""
     count = session.query(Task).join(List).filter(Task.done, List.name == list_name).count()
     return count
 
 
-def welcome_tasks():
+def welcome_tasks() -> tuple[int, int, int]:
+    """Return number of missed tasks and tasks due today and this week"""
     tasks = session.query(Task).all()
     missed = 0
     today = 0
@@ -110,10 +133,10 @@ def welcome_tasks():
         left = util.time_until_date(task.deadline)
         if left < 0:
             missed += 1
-        elif left == 0:
-            today += 1
         elif left < 7:
             this_week += 1
+            if left == 0:
+                today += 1
     return missed, today, this_week
 
 

@@ -2,6 +2,11 @@ import datetime
 import todo.exception as exception
 
 
+def add_s(word: str, number: int):
+    """Add s to the end of a word if necessary"""
+    return word if number == 1 else word+'s'
+
+
 def calculate_notification(task):
     if task.priority == 3:
         time = datetime.datetime.today() + datetime.timedelta(1)
@@ -43,11 +48,11 @@ def date_parser(date: str) -> datetime:
     if date == 'today':
         parsed_date = today
     elif date == 'tomorrow':
-        parsed_date = today + datetime.timedelta(1)
+        parsed_date = today + datetime.timedelta(days=1)
     else:
         days = {'monday': 0, 'tuesday': 1, 'wednesday': 2, 'thursday': 3, 'friday': 4, 'saturday': 5, 'sunday': 6}
         if date in days.keys():
-            parsed_date = today + datetime.timedelta((days[date]-today.weekday()) % 7)
+            parsed_date = today + datetime.timedelta(days=(days[date]-today.weekday()) % 7)
         else:
             try:
                 parsed_date = datetime.datetime.strptime(date, '%d/%m/%Y')
@@ -65,15 +70,15 @@ def date_pprinter(date: datetime) -> (str, int):
     2 - today
     """
     today = datetime.datetime.today()
-    delta = (date - today).days
+    delta = (date.date() - today.date()).days
     if delta == 0:
         return 'today', 2
     days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
     if delta == -1:
         return 'yesterday', 1
-    elif 0 < delta <= 1:
+    elif delta == 1:
         return 'tomorrow', 0
-    elif 7 >= delta > 0:
+    elif delta <= 7:
         return days[date.weekday()], 0
     else:
         missed = delta < 0

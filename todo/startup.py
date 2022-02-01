@@ -1,12 +1,12 @@
 from plyer import notification
 from todo.data_controllers import manage_deadlines
-from todo.util import date_pprinter
+import todo.util as util
 
 
 def notify_upcoming(task, left: int):
-    days = 'days' if left != 1 else 'day'
-    text = f'deadline: {date_pprinter(task.deadline)[0]}\n' \
-           f'{left} {days} left'
+    deadline = util.date_pprinter(task.deadline)
+    text = f'deadline: {deadline[0]}\n' \
+           f'{left} {util.add_s("day", left)} left'
     notification.notify(
         title=task.name,
         message=text)
