@@ -19,6 +19,7 @@ def commandline(screen: ui.Screen, prompt=':') -> str :
     screen.prompt(0, prompt)
 
     buffer = ''
+    history = screen.prompt_history
     prompt_len = len(prompt)
 
     pos = 0
@@ -33,6 +34,9 @@ def commandline(screen: ui.Screen, prompt=':') -> str :
             pos -= 1
         elif key == curses.KEY_RIGHT and pos < len(buffer):
             pos += 1
+        elif key == curses.KEY_UP or key == curses.KEY_DOWN:
+            history, buffer = buffer, history
+            pos = len(buffer)
         elif key == curses.KEY_BACKSPACE and pos > 0:
             buffer = buffer[:pos - 1] + buffer[pos:]
             pos -= 1
@@ -61,6 +65,7 @@ def commandline(screen: ui.Screen, prompt=':') -> str :
         screen.stdscr.refresh()
         key = screen.stdscr.get_wch()
 
+    screen.prompt_history = buffer
     screen.clear_prompt()
     curses.curs_set(False)
     return buffer

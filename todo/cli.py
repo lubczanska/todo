@@ -89,8 +89,7 @@ edit.add_argument('TASKS', type=str, nargs='*',
                        'and all the other flags are ignored')
 edit.add_argument('--name', type=str,
                   help='new name for list or tasks')
-edit.add_argument('--list', type=str,
-                  help='name of list where tasks should be moved')
+# edit.add_argument('--list', type=str, help='name of list where tasks should be moved')
 edit.add_argument('--deadline', type=str,
                   help="possible values: 'today', 'tomorrow', day of the week, date in dd/mm/YYYY format")
 edit.add_argument('--priority', type=int,
@@ -164,6 +163,8 @@ cli_parser = argparse.ArgumentParser(description='A simple to-do list app',
                                      parents=[master_parser])
 cli_parser.add_argument('--quiet', '-q', action='store_true',
                         help='run tui without triggering notifications')
+cli_parser.add_argument('--debug', '-d', action='store_true',
+                        help='print out db contents')
 tui_parser = argparse.ArgumentParser(parents=[master_parser], exit_on_error=False, add_help=False)
 
 
@@ -188,18 +189,25 @@ def get_help(command=None) -> str:
 
 
 def main_controller():
-    args = cli_parser.parse_args()
-    if args.command:
-        try:
-            args.func(args)
-        except (exception.DuplicateTaskError, exception.DuplicateListError, exception.NoTaskError,
-                exception.WrongDateError, exception.PriorityError) as e:
-            print(e)
-        finally:
+    try:
+        args = cli_parser.parse_args()
+        if args.command:
+            try:
+                args.func(args)
+            except (exception.DuplicateTaskError, exception.DuplicateListError, exception.NoTaskError,
+                    exception.WrongDateError, exception.PriorityError) as e:
+                print(e)
+            finally:
+                data.session_quit()
+        elif args.debug:
+            data.debug()
             data.session_quit()
-    else:
-        startup(args.quiet)
-        tui.run()
+        else:
+            startup(args.quiet)
+            tui.run()
+    except Exception as e:
+        print(str(e))
+    finally:
         data.session_quit()
 
 

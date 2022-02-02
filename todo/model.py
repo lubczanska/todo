@@ -38,13 +38,13 @@ class Task(Base):
         if value is None:
             raise ValueError('None')
         elif len(value) > 45:
-            raise ValueError('name too long')
+            raise ValueError('Name too long')
         return value
 
     @validates('notes')
     def validate_name(self, key, value):
         if value and len(value) > 70:
-            raise ValueError
+            raise ValueError('Notes too long')
         return value
 
     @validates('priority')
@@ -56,7 +56,7 @@ class Task(Base):
     @validates('repeat')
     def validate_repeat(self, key, value):
         if value and value <= 0:
-            raise ValueError
+            raise ValueError('Repeat value has to be positive')
         return value
 
     # deadline validation is done by util.date_parser
@@ -87,8 +87,11 @@ class List(Base):
     def validate_name(self, key, value):
         if value is None:
             raise ValueError
-        elif len(value) > 45 or value == '.':
-            raise ValueError
+        elif len(value) > 45:
+            raise ValueError('Name too long')
+        elif value == '.':
+            # . reserved for accessing current list in tui mode
+            raise ValueError(' . is not a valid name for a list')
         return value
 
     def __init__(self, name: str):

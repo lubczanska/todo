@@ -74,12 +74,12 @@ def edit_task(task_name: str, list_name: str, changes):
     task = session.query(Task).join(List).filter(List.name == list_name, Task.name == task_name).first()
     if task is None:
         raise exception.NoTaskError
-    # TODO check if name is not duplicate
-    # TODO check if list exists
     for (key, value) in changes.items():
+        if key == 'name' and session.query(Task).join(List).filter(Task.name == key, List.name == list_name).first() is not None:
+            raise exception.DuplicateTaskError
         task[key] = value
+    # abort changes if new values are incorrect
     if task.priority > 0 and task.deadline is None:
-        # abort changes
         raise exception.PriorityError
     session.commit()
 
@@ -181,12 +181,21 @@ def manage_deadlines(quiet):
                 task.priority = 1
                 task.notify = util.date_add_days(-1, task.deadline)
             if task.priority == 3:
-                task.notify = util.date_add_days(0)  # next open TODO: tomorrow
+                task.notify = util.date_add_days(0)
             else:
                 task.notify = util.date_add_days(1, task.deadline)
     session.commit()
     return missed, notify
 
 
-def is_modified(instance=None):
-    return session.dirty
+def debug():
+    lists = session.query(List).all()
+    tasks = session.query(Task).all()
+    print('LISTS:')
+    for lst in lists:
+        print(f'{lst.id:>3}. {lst.name} {lst.task_ids}')
+    print('TASKS:')
+    for task in tasks:
+        print(f'{task.id:>3}. {task.name} {task.list_id} '
+              f'{task.done} {task.deadline} {task.priority} {task.notify} '
+              f'{task.notes}')

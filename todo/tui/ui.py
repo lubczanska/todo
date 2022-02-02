@@ -8,6 +8,7 @@ class Screen:
         self.stdscr = stdscr
         self.h, self.w = self.stdscr.getmaxyx()
         self.app = app
+        self.prompt_history = ''
         setup_curses()
 
     def resize(self):
@@ -191,7 +192,7 @@ class UI:
             x = x_offset
 
             if self.mode == 'main':
-                max_name = max((len(item[0]) for item in self.items))
+                max_name = max(max((len(item[0]) for item in self.items)), 30)
                 for idx, item in enumerate(self.items[start_idx:end_idx+1]):
                     if idx + start_idx == self.current_row:
                         print_menu_row(stdscr, item, y, x, max_name, 1)
