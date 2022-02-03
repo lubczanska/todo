@@ -7,18 +7,15 @@ import todo.data_controllers as data
 from todo.startup import startup
 from todo.util import date_parser
 
-master_parser = argparse.ArgumentParser(add_help=False)
-subparser = master_parser.add_subparsers(dest='command', title='commands')
+tui_parser = argparse.ArgumentParser(add_help=False, exit_on_error=False)
 
-
+tui_subparser = tui_parser.add_subparsers(dest='command', title='commands')
 # commands
-add = subparser.add_parser('add', exit_on_error=False, help='add new list or tasks')
-rm = subparser.add_parser('rm', exit_on_error=False, help='remove list or tasks')
-edit = subparser.add_parser('edit', exit_on_error=False, help='edit list/task details')
-check = subparser.add_parser('check', exit_on_error=False, help='mark task as completed')
-uncheck = subparser.add_parser('uncheck', exit_on_error=False, help='mark task as not completed')
-ls = subparser.add_parser('ls', exit_on_error=False, help='display all tasks in a list in tui mode')
-show = subparser.add_parser('show', exit_on_error=False, help='display task details')
+add = tui_subparser.add_parser('add', exit_on_error=False, add_help=False)
+rm = tui_subparser.add_parser('rm', exit_on_error=False, add_help=False)
+edit = tui_subparser.add_parser('edit', exit_on_error=False, add_help=False)
+check = tui_subparser.add_parser('check', exit_on_error=False, add_help=False)
+uncheck = tui_subparser.add_parser('uncheck', exit_on_error=False, add_help=False)
 
 
 # add
@@ -126,6 +123,24 @@ uncheck.add_argument('TASKS', type=str, nargs='+')
 uncheck.set_defaults(func=parse_uncheck)
 
 
+cli_parser = argparse.ArgumentParser(description='A simple to-do list app',
+                                     epilog="If no command is specified tui mode will be opened.\n\n"
+                                            "In tui mode press ':' to enter commands")
+cli_parser.add_argument('--quiet', '-q', action='store_true',
+                        help='run tui without triggering notifications')
+cli_parser.add_argument('--debug', '-d', action='store_true',
+                        help='print out db contents')
+subparser = cli_parser.add_subparsers(dest='command', title='commands')
+
+cli_add = subparser.add_parser('add', parents=[add], help='add new list or tasks')
+cli_rm = subparser.add_parser('rm', parents=[rm], help='remove list or tasks')
+cli_edit = subparser.add_parser('edit', parents=[edit], help='edit list/task details')
+cli_check = subparser.add_parser('check', parents=[check], help='mark task as completed')
+cli_uncheck = subparser.add_parser('uncheck', parents=[uncheck], help='mark task as not completed')
+ls = subparser.add_parser('ls', help='display all tasks in a list in tui mode')
+show = subparser.add_parser('show', help='display task details')
+
+
 # ls
 def parse_ls(args):
     if not args.LIST:
@@ -156,17 +171,22 @@ show.add_argument('TASK', type=str, nargs='?',
                   help='name of task to display, if no list is given all task on LIST will be printed instead')
 show.set_defaults(func=parse_show)
 
+"""
+# Desperate attempts to suppress subparsers printing help on error
+class NoHelpParser(argparse.ArgumentParser):
+    def error(self, message: str):
+        raise ValueError(message)
 
-cli_parser = argparse.ArgumentParser(description='A simple to-do list app',
-                                     epilog="If no command is specified tui mode will be opened.\n\n"
-                                            "In tui mode press ':' to enter commands",
-                                     parents=[master_parser])
-cli_parser.add_argument('--quiet', '-q', action='store_true',
-                        help='run tui without triggering notifications')
-cli_parser.add_argument('--debug', '-d', action='store_true',
-                        help='print out db contents')
-tui_parser = argparse.ArgumentParser(parents=[master_parser], exit_on_error=False, add_help=False)
-
+class NoHelpSubparser(argparse._SubParsersAction):
+tui_parser = argparse.ArgumentParser(exit_on_error=False, add_help=False)
+# a really dumb solution to printing help in tui mode
+tui_subparser = tui_parser.add_subparsers(dest='command', title='commands')
+tui_add = tui_subparser.add_parser('add', parents=[add], exit_on_error=False, add_help=False)
+tui_rm = tui_subparser.add_parser('rm', parents=[rm], exit_on_error=False, add_help=False)
+tui_edit = tui_subparser.add_parser('edit', parents=[edit], exit_on_error=False, add_help=False)
+tui_check = tui_subparser.add_parser('check', parents=[check], exit_on_error=False, add_help=False)
+tui_uncheck = tui_subparser.add_parser('uncheck', parents=[uncheck], exit_on_error=False, add_help=False)
+"""
 
 def get_help(command=None) -> str:
     """"Return help message for tui help command"""

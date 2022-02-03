@@ -157,7 +157,7 @@ def manage_deadlines(quiet):
     missed = []  # tasks with deadlines missed since last time
     notify = []  # tuples of tasks with due notifications and days left until deadline
     for task in tasks:
-        if util.time_to_notify(task.notify):
+        if util.time_to_notify(task.notify) and task.deadline:
             left = util.time_until_date(task.deadline)
             if left < 0:
                 if task.repeat:
