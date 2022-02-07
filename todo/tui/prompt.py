@@ -4,7 +4,7 @@ import todo.exception as exception
 import todo.tui.ui as ui
 
 
-def commandline(screen: ui.Screen, prompt=':') -> str :
+def commandline(screen: ui.Screen, prompt=':') -> str:
     """
     Collect and display text entered by the user.
     Input mode be escaped with ESC and confirmed with ENTER
@@ -72,18 +72,13 @@ def commandline(screen: ui.Screen, prompt=':') -> str :
 
 
 def error_prompt(screen, message):
-    """
-    Display a red text message in the prompt area
-    """
+    """ Display a red text message in the prompt area """
     screen.clear_prompt()
-    #screen.prompt(0, message[:screen.w - 1], [curses.color_pair(2), curses.A_BOLD])
     screen.prompt(0, message[:screen.w - 3], curses.color_pair(2))
 
 
-def regular_prompt(screen, message=''):
-    """
-    Display a white text message in the prompt are
-    """
+def regular_prompt(screen, message):
+    """ Display a white text message in the prompt are """
     screen.clear_prompt()
     screen.prompt(0, message[:screen.w - 3])
 
