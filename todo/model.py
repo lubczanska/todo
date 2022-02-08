@@ -36,19 +36,21 @@ class Task(Base):
     @validates('name')
     def validate_name(self, key, value):
         if value is None:
-            raise ValueError('None')
+            raise ValueError('Task name not provided')
         elif len(value) > 45:
-            raise ValueError('Name too long')
+            raise ValueError('Task name too long')
         return value
 
     @validates('notes')
     def validate_name(self, key, value):
+        """ Current word limit for a note is 70 characters """
         if value and len(value) > 70:
             raise ValueError('Notes too long')
         return value
 
     @validates('priority')
     def validate_priority(self, key, value):
+        """ Check if deadline is in 0-3 range. Additional validation is done by subparser function """
         if value not in range(4):
             raise exception.PriorityError
         return value
@@ -60,7 +62,6 @@ class Task(Base):
         return value
 
     # deadline validation is done by util.date_parser
-    # additional priority validation is done by subparser functions
 
     def __init__(self, name: str, deadline: datetime, priority: int, notes: str, repeat: int):
         self.name = name
@@ -85,13 +86,15 @@ class List(Base):
 
     @validates('name')
     def validate_name(self, key, value):
+        """ Check if name is not too long or reserved """
+        banned_names = ['.']
         if value is None:
             raise ValueError
         elif len(value) > 45:
             raise ValueError('Name too long')
-        elif value == '.':
+        elif value in banned_names:
             # . reserved for accessing current list in tui mode
-            raise ValueError(' . is not a valid name for a list')
+            raise ValueError('This is not a valid name for a list')
         return value
 
     def __init__(self, name: str):

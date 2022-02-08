@@ -2,6 +2,8 @@ import curses
 
 import todo.cli as cli
 
+HIGH = 9
+
 
 def gen_help(command):
     if command in ['help', '--help', '-h', None]:
@@ -15,10 +17,10 @@ def print_help(stdscr, help_msg):
     h, w = stdscr.getmaxyx()
     stdscr.clear()
     try:
-        stdscr.addstr(h-1, 1, ' press q to exit ', curses.color_pair(1))
+        stdscr.addstr(h-1, 1, ' press q to exit ', curses.color_pair(HIGH))
         stdscr.addstr(1, 1, help_msg)
     except Exception:
-        stdscr.addstr(h-1, 1, ' press q to exit ', curses.color_pair(1))
+        stdscr.addstr(h-1, 1, ' press q to exit ', curses.color_pair(HIGH))
     stdscr.refresh()
 
 

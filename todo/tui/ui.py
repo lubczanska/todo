@@ -2,6 +2,17 @@ import curses
 import todo.data_controllers as data
 import todo.util as util
 
+DEF = 0
+BLACK = 1
+RED = 2
+GREEN = 3
+YELLOW = 4
+BLUE = 5
+MAGENTA = 6
+CYAN = 7
+WHITE = 8
+HIGH = 9
+
 
 class Screen:
     def __init__(self, stdscr, app):
@@ -48,28 +59,30 @@ class Screen:
 
     def too_small(self):
         self.stdscr.erase()
-        try:
-            self.stdscr.addstr(0, 0, 'TOO SMALL')
-        except Exception:
-            pass
-        finally:
-            self.stdscr.refresh()
+        self.stdscr.refresh()
 
 
 def setup_curses():
     curses.curs_set(0)  # turn off cursor blinking
     curses.noecho()  # don't display key presses
     curses.use_default_colors()
-    curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)  # menu highlight
+    # 1-8 system colors on default background
+    # 0 - terminal default
+    # 9 - black on white
+
+    curses.init_pair(1, curses.COLOR_BLACK, -1)
     curses.init_pair(2, curses.COLOR_RED, -1)  # missed deadline
-    curses.init_pair(3, curses.COLOR_YELLOW, -1)  # deadline today
-    curses.init_pair(4, curses.COLOR_GREEN, -1)  # for completed tasks
-    curses.init_pair(5, -1, -1)  # default
-    curses.init_pair(6, curses.COLOR_BLUE, -1)  # blue
+    curses.init_pair(3, curses.COLOR_GREEN, -1)  # for completed tasks
+    curses.init_pair(4, curses.COLOR_YELLOW, -1)  # deadline today
+    curses.init_pair(5, curses.COLOR_BLUE, -1)
+    curses.init_pair(6, curses.COLOR_MAGENTA, -1)
+    curses.init_pair(7, curses.COLOR_CYAN, -1)
+    curses.init_pair(8, curses.COLOR_WHITE, -1)
+    curses.init_pair(9, curses.COLOR_BLACK, curses.COLOR_WHITE)
 
 
-def print_list_row(stdscr, task, y, x, max_name, verbose=False, color=5):
-    color2 = 4 if color == 5 else 1
+def print_list_row(stdscr, task, y, x, max_name, verbose=False, color=DEF):
+    color2 = GREEN if color == DEF else HIGH
 
     item = util.task_info_str(task)
     line = f']  {item[0]:<{max_name}}'
@@ -79,27 +92,30 @@ def print_list_row(stdscr, task, y, x, max_name, verbose=False, color=5):
     stdscr.addstr(y, x + 1, item[1], curses.color_pair(color2))
     stdscr.addstr(y, x + 2, line, curses.color_pair(color))
     # deadline
-    if task.done:  # done tasks green
-        stdscr.addstr(y, x + max_name + 15, f'{item[2][0]:<9}', curses.color_pair(4))
-    elif item[2][1]:  # missed deadlines red, today yellow
-        stdscr.addstr(y, x + max_name + 15, f'{item[2][0]:<9}', curses.color_pair(item[2][1] + 1))
+    if task.done:  # done
+        deadline_color = GREEN
+    elif item[2][1] == 1:  # missed
+        deadline_color = RED
+    elif item[2][1] == 2:  # today
+        deadline_color = YELLOW
     else:
-        stdscr.addstr(y, x + max_name + 15, f'{item[2][0]:<9}')
+        deadline_color = DEF
+    stdscr.addstr(y, x + max_name + 15, f'{item[2][0]:<9}', curses.color_pair(deadline_color))
 
     if verbose:
         # notes
         if item[3]:
             stdscr.addstr(y + 1, x + 7, item[3][:70])
         # display info about priority and repeating
-        stdscr.addstr(y + 2, x + 1, f'priority: {task.priority}', curses.color_pair(6))
+        stdscr.addstr(y + 2, x + 1, f'priority: {task.priority}', curses.color_pair(BLUE))
         rep = task.repeat
         if rep is not None:
             stdscr.addstr(y + 2, x + 12,
-                          f'        repeats every {rep} {util.add_s("day", rep)}', curses.color_pair(6))
+                          f'        repeats every {rep} {util.add_s("day", rep)}', curses.color_pair(BLUE))
     return y
 
 
-def print_menu_row(stdscr, item, y, x, max_name, color=5):
+def print_menu_row(stdscr, item, y, x, max_name, color=DEF):
     line = f'{item[0]:<{max_name}}  [{item[2]}/{item[1]}]'
     stdscr.addstr(y, x, line, curses.color_pair(color))
 
@@ -151,17 +167,19 @@ class UI:
 
     def welcome_message(self, screen: Screen):
         """Print the totally encouraging welcome message"""
+        def is_too_much(x):
+            return f'{x:>2}' if x <= 99 else 'a lot of'
         x_offset = 3
         y_offset = 2
         stdscr = screen.stdscr
         stdscr.addstr(y_offset - 1, x_offset - 1, f'Hello {self.name}!', curses.A_BOLD)
-        is_too_much = lambda x: f'{x:>2}' if x <= 99 else 'a lot of'
         stdscr.addstr(y_offset + 1, x_offset, f'you have:   ')
         words1 = ['missed',
                   f'{util.add_s("task", self.task_summary[1])} due ',
                   f'{util.add_s("task", self.task_summary[2])} due ']
         words2 = [f' {util.add_s("task", self.task_summary[0])}', 'today', 'next week']
-        for n, word1, word2, color1, color2 in zip(self.task_summary, words1, words2, [2, 5, 5], [5, 3, 5]):
+        for n, word1, word2, color1, color2 in zip(self.task_summary, words1, words2,
+                                                   [RED, DEF, DEF], [DEF, YELLOW, DEF]):
             y_offset += 1
             stdscr.addstr(y_offset, x_offset + 12, f'{is_too_much(n)} ')
             y, x = stdscr.getyx()
@@ -195,7 +213,7 @@ class UI:
                 max_name = max(max((len(item[0]) for item in self.items)), 30)
                 for idx, item in enumerate(self.items[start_idx:end_idx+1]):
                     if idx + start_idx == self.current_row:
-                        print_menu_row(stdscr, item, y, x, max_name, 1)
+                        print_menu_row(stdscr, item, y, x, max_name, HIGH)
                     else:
                         print_menu_row(stdscr, item, y, x, max_name, )
                     y += line_height
@@ -204,7 +222,7 @@ class UI:
                 verbose = self.mode == 'listv'
                 for idx, item in enumerate(self.items[start_idx:end_idx+1]):
                     if idx + start_idx == self.current_row:
-                        print_list_row(stdscr, item, y, x, max_name, verbose, 1)
+                        print_list_row(stdscr, item, y, x, max_name, verbose, HIGH)
                     else:
                         print_list_row(stdscr, item, y, x, max_name, verbose)
                     y += line_height
@@ -258,3 +276,16 @@ class UI:
             self.modified = True
         return
 
+    def delete_entry(self):
+        if self.mode == 'main':
+            data.remove_list(self.get_selected())
+        else:
+            data.remove_task(self.get_selected(), self.list_name)
+        self.modified = True
+
+    def get_selected(self):
+        """ Returns name of selected entry"""
+        if self.mode == 'main':
+            return self.items[self.current_row][0]
+        else:
+            return self.items[self.current_row].name

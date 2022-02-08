@@ -46,6 +46,8 @@ def add_list(list_name: str):
     if session.query(List.id).filter_by(name=list_name).first() is not None:
         raise exception.DuplicateListError
         return
+    if list_name == 'startup':
+        raise ValueError('This is not a valid name for a list')
     new_list = List(list_name)
     session.add(new_list)
     session.commit()
@@ -75,7 +77,8 @@ def edit_task(task_name: str, list_name: str, changes):
     if task is None:
         raise exception.NoTaskError
     for (key, value) in changes.items():
-        if key == 'name' and session.query(Task).join(List).filter(Task.name == key, List.name == list_name).first() is not None:
+        if key == 'name' and session.query(Task).join(List).filter(Task.name == key,
+                                                                   List.name == list_name).first() is not None:
             raise exception.DuplicateTaskError
         task[key] = value
     # abort changes if new values are incorrect
@@ -96,7 +99,10 @@ def rename_list(list_name: str, new_name: str):
 def lists_info():
     """Return info about number of all tasks and completed tasks for each list"""
     lists = session.query(List).all()
-    info = [(lst.name, len(lst.task_ids), count_done(lst.name)) for lst in lists]
+    info = []
+    for lst in lists:
+        if lst.name != 'startup' or len(lst.task_ids) > 0:
+            info.append((lst.name, len(lst.task_ids), count_done(lst.name)))
     return info
 
 

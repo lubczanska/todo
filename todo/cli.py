@@ -48,6 +48,11 @@ def parse_add(args):
                 raise
 
 
+def parse_sticky(args):
+    args.LIST = 'startup'
+    parse_add(args)
+
+
 def parse_rm(args):
     if not args.TASKS:
         data.remove_list(args.LIST)
@@ -61,7 +66,7 @@ def parse_edit(args):
         data.rename_list(args.LIST, args.name)
     else:
         args_vars = vars(args)
-        changes = {arg: args_vars[arg] for arg in ['name', 'list', 'priority', 'notes', 'repeat'] if args_vars[arg]}
+        changes = {arg: args_vars[arg] for arg in ['name', 'priority', 'notes', 'repeat'] if args_vars[arg]}
         if args.deadline:
             changes['deadline'] = date_parser(args.deadline)
         for task in args.TASKS:
@@ -93,7 +98,7 @@ def parse_show(args):
         for task in data.list_info(args.LIST):
             print(task.name)
     else:
-        tui.run('task', args.LIST, args.TASK)
+        tui.run('task', args.LIST, args.TASK, args.center, args.color)
 
 
 def add_subparsers(subparser):
@@ -103,6 +108,7 @@ def add_subparsers(subparser):
     edit = subparser.add_parser('edit', exit_on_error=False, help='edit list/task details')
     check = subparser.add_parser('check', exit_on_error=False, help='mark task as completed')
     uncheck = subparser.add_parser('uncheck', exit_on_error=False, help='mark task as not completed')
+    sticky = subparser.add_parser('sticky', exit_on_error=False, help='add task to startup list')
 
     add.add_argument('LIST', type=str,
                      help="name of the list, will be created if it doesn't exist yet")
@@ -153,13 +159,27 @@ def add_subparsers(subparser):
     uncheck.add_argument('LIST', type=str)
     uncheck.add_argument('TASKS', type=str, nargs='+')
     uncheck.set_defaults(func=parse_uncheck)
-    return add, rm, edit, check, uncheck
+    sticky.add_argument('TASKS', type=str, nargs='*',
+                     help='names of tasks to be added')
+    sticky.add_argument('--deadline', type=str,
+                     help="possible values: 'today', 'tomorrow', day of the week, date in dd/mm/YYYY format")
+    sticky.add_argument('--priority', type=int,
+                     help='controls the amount of notifications (if > 0 a deadline is needed):'
+                          ' 0) none'
+                          ' 1) 1 day before deadline'
+                          ' 2) a week before deadline'
+                          ' 3) every time the app is opened')
+    sticky.add_argument('--repeat', type=int,
+                     help='the task will repeat REPEAT days after deadline (deadline needed)')
+    sticky.add_argument('--notes', type=str)
+    sticky.set_defaults(func=parse_sticky)
+    return add, rm, edit, check, uncheck, sticky
 
 
-tui_add, tui_rm, tui_edit, tui_check, tui_uncheck = add_subparsers(tui_subparser)
-add, rm, edit, check, uncheck = add_subparsers(cli_subparser)
+tui_add, tui_rm, tui_edit, tui_check, tui_uncheck, tui_sticky = add_subparsers(tui_subparser)
+add, rm, edit, check, uncheck, sticky = add_subparsers(cli_subparser)
 
-
+# subparsers only for cli mode
 ls = cli_subparser.add_parser('ls', help='display all tasks in a list in tui mode')
 show = cli_subparser.add_parser('show', help='display task details')
 
@@ -170,6 +190,8 @@ ls.set_defaults(func=parse_ls)
 show.add_argument('LIST', type=str)
 show.add_argument('TASK', type=str, nargs='?',
                   help='name of task to display, if no list is given all task on LIST will be printed instead')
+show.add_argument('--center', '-c', action='store_true', help='display task at the center of the terminal')
+show.add_argument('--color', '-C', type=int, help='set task color [0-7]')
 show.set_defaults(func=parse_show)
 
 
@@ -219,6 +241,12 @@ def get_args(command):
     elif command == 'uncheck':
         arg_dict = [('', 'List: '),
                     ('', 'Tasks: ')]
+    elif command == 'sticky':
+        arg_dict = [('', 'Tasks: '),
+                    ('--deadline', 'Deadline: '),
+                    ('--priority', 'Priority: '),
+                    ('--repeat', 'Repeat: '),
+                    ('--notes', 'Notes: ')]
     return arg_dict
 
 
@@ -226,13 +254,8 @@ def main_controller():
     try:
         args = cli_parser.parse_args()
         if args.command:
-            try:
-                args.func(args)
-            except (exception.DuplicateTaskError, exception.DuplicateListError, exception.NoTaskError,
-                    exception.WrongDateError, exception.PriorityError) as e:
-                print(e)
-            finally:
-                data.session_quit()
+            args.func(args)
+            data.session_quit()
         elif args.debug:
             data.debug()
             data.session_quit()

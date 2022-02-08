@@ -11,14 +11,14 @@ import todo.tui.ui as ui
 import todo.util as util
 
 
-def command_mode(screen: ui.Screen):
+def command_mode(screen: ui.Screen, startbuf=''):
     """
     Display command prompt then read and parse user input;
     display help message if requested or parsing errors
     """
     db_modified = False
     try:
-        user_input = prompt.commandline(screen)
+        user_input = prompt.commandline(screen, startbuf=startbuf)
         if not user_input:
             curses.curs_set(False)
             return
@@ -98,6 +98,24 @@ def run_curses(stdscr, mode: str, list_name: str | None):
                 app.modified = True
         elif key == ord('i'):
             app.toggle_v_mode()
+        elif key == ord('a'):
+            buf = 'add ' if app.mode == 'main' else 'add . '
+            if screen.display_wrapper(command_mode, buf):
+                # user entered a valid command, modifying the database
+                app.modified = True
+        elif key == ord('e'):
+            # open command prompt with start of edit command
+            buf = f'edit {app.get_selected()} ' if app.mode == 'main' else f'edit . {app.get_selected()} '
+            if screen.display_wrapper(command_mode, buf):
+                # user entered a valid command, modifying the database
+                app.modified = True
+        elif key == ord('d'):
+            # ask if user wants to delete entry
+            screen.display_wrapper(prompt.error_prompt, 'Delete? [y/N]')
+            key = screen.stdscr.getch()
+            if key == ord('y'):
+                app.delete_entry()
+            screen.clear_prompt()
         elif key == curses.KEY_RESIZE:
             # handle window resize
             screen.resize()
@@ -119,11 +137,11 @@ def run_curses(stdscr, mode: str, list_name: str | None):
             app.list_finished = False
 
 
-def run(mode='main', list_name=None, task_name=None):
+def run(mode='main', list_name=None, task_name=None, center=False, color=None):
     os.environ.setdefault("ESCDELAY", "25")
     stdscr = curses.initscr()
     if mode == 'task':
-        curses.wrapper(task.run_task, task_name, list_name)
+        curses.wrapper(task.run_task, task_name, list_name, center, color)
     else:
         curses.wrapper(run_curses, mode, list_name)
 

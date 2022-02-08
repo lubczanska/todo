@@ -2,7 +2,7 @@
 
 `todo` is a simple command line app with a tui mode for managing your to-do lists
 
-##Installation
+## Installation
 
 coming soon, for now:
 ```
@@ -13,9 +13,9 @@ $ cd todo
 $ python3 todo.py
 ```  
 
-##Usage
+## Usage
 
-```bash
+```
 $ todo --help
 
 usage: todo [-h] [--quiet] [--debug] {add,rm,edit,check,uncheck,ls,show} ...
@@ -40,7 +40,10 @@ commands:
 If no command is specified tui mode will be opened. In tui mode press ':' to enter commands
 
 ```
-###TUI mode
+### TUI mode
+
+Resizing the terminal may lead to visual bugs, especially when entering characters or viewing help.
+In such case simply restart the app in a correctly sized terminal
 
 - `$ todo` opens the tui in `main` mode
 - `$ todo ls LIST` opens the tui in `list` mode, displaying `LIST`
