@@ -21,8 +21,7 @@ class WrongDateError(Exception):
     """Raised when the date format is not supported"""
 
     def __str__(self):
-        return "A date must be one of these things: " \
-              "'today','tomorrow', day of the week, date in dd/mm/yyyy format"
+        return "Invalid date format"
 
 
 class NoTaskError(Exception):
@@ -34,9 +33,8 @@ class NoTaskError(Exception):
 
 class PriorityError(Exception):
     """Raised when the priority is not 0-3 or a priority is set with no deadline"""
-
     def __str__(self):
-        return 'Priority needs to be an integer between 0 and 3. Priority > 0 needs a deadline'
+        return 'Priority needs to be an integer between 0 and 3. Priority > 0 requires a deadline'
 
 
 class ParsingError(Exception):

@@ -105,7 +105,7 @@ def run_curses(stdscr, mode: str, list_name: str | None):
                 app.modified = True
         elif key == ord('e'):
             # open command prompt with start of edit command
-            buf = f'edit {app.get_selected()} ' if app.mode == 'main' else f'edit . {app.get_selected()} '
+            buf = f"edit '{app.get_selected()}' " if app.mode == 'main' else f"edit . '{app.get_selected()}' "
             if screen.display_wrapper(command_mode, buf):
                 # user entered a valid command, modifying the database
                 app.modified = True

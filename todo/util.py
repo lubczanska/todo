@@ -61,22 +61,36 @@ def date_parser(date: str) -> datetime:
     """
     today = datetime.datetime.today()
     if date == 'today':
-        parsed_date = today
+        return today
     elif date == 'tomorrow':
-        parsed_date = today + datetime.timedelta(days=1)
+        return today + datetime.timedelta(days=1)
+    elif date == 'yesterday':
+        return today + datetime.timedelta(days=-1)
     else:
-        days = {'monday': 0, 'tuesday': 1, 'wednesday': 2, 'thursday': 3, 'friday': 4, 'saturday': 5, 'sunday': 6}
-        if date in days.keys():
-            shift = days[date]-today.weekday()
+        days = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5, 'sun': 6}
+        if date[:3] in days.keys():
+            shift = days[date[:3]]-today.weekday()
             if shift == 0:
                 shift = 7
-            parsed_date = today + datetime.timedelta(days=shift)
+            return today + datetime.timedelta(days=shift)
         else:
-            try:
-                parsed_date = datetime.datetime.strptime(date, '%d/%m/%Y')
-            except Exception:
-                raise exception.WrongDateError
-    return parsed_date
+            for fmt in ['%d/%m/%Y', '%d-%m-%Y', '%d.%m.%Y', '%d-%m-%Y']:
+                try:
+                    return datetime.datetime.strptime(date, fmt)
+                except ValueError:
+                    pass
+            for fmt in ['%d/%m', '%d-%m', '%d.%m', '%d-%m']:
+                # auto set year as year to current or next
+                try:
+                    parsed_date = datetime.datetime.strptime(date, fmt)
+                    parsed_date = datetime.datetime(year=today.year, month=parsed_date.month, day=parsed_date.day)
+                    if parsed_date < today:
+                        return datetime.datetime(year=today.year+1, month=parsed_date.month, day=parsed_date.day)
+                    else:
+                        return parsed_date
+                except ValueError:
+                    pass
+    raise exception.WrongDateError
 
 
 def date_pprinter(date: datetime) -> (str, int):

@@ -47,7 +47,7 @@ def add_list(list_name: str):
         raise exception.DuplicateListError
         return
     if list_name == 'startup':
-        raise ValueError('This is not a valid name for a list')
+        raise ValueError("List 'startup' cannot be added")
     new_list = List(list_name)
     session.add(new_list)
     session.commit()

@@ -28,7 +28,7 @@ cli_parser = argparse.ArgumentParser(description='A simple to-do list app',
 cli_parser.add_argument('--quiet', '-q', action='store_true',
                         help='run tui without triggering notifications')
 cli_parser.add_argument('--debug', '-d', action='store_true',
-                        help='print out db contents')
+                        help='print out database contents')
 cli_subparser = cli_parser.add_subparsers(dest='command', title='commands')
 
 
@@ -115,7 +115,9 @@ def add_subparsers(subparser):
     add.add_argument('TASKS', type=str, nargs='*',
                      help='names of tasks to be added, if no names are given an empty list will be added')
     add.add_argument('--deadline', type=str,
-                     help="possible values: 'today', 'tomorrow', day of the week, date in dd/mm/YYYY format")
+                     help="possible values: 'today', 'tomorrow', 'yesterday', string with first 3 letters"
+                          " matching a day of the week, date in dd/mm/YYYY or dd/mm format (other separators:"
+                          " - , . ). If no year is provided then nearest future date is set")
     add.add_argument('--priority', type=int,
                      help='controls the amount of notifications (if > 0 a deadline is needed):'
                           ' 0) none'
@@ -140,7 +142,9 @@ def add_subparsers(subparser):
                       help='new name for list or tasks')
     # edit.add_argument('--list', type=str, help='name of list where tasks should be moved')
     edit.add_argument('--deadline', type=str,
-                      help="possible values: 'today', 'tomorrow', day of the week, date in dd/mm/YYYY format")
+                      help="possible values: 'today', 'tomorrow', 'yesterday', string with first 3 letters"
+                           " matching a day of the week, date in dd/mm/YYYY or dd/mm format (other separators:"
+                           " - , . ). If no year is provided then nearest future date is set")
     edit.add_argument('--priority', type=int,
                       help='controls the amount of notifications (if > 0 a deadline is needed):'
                            ' 0) none'
