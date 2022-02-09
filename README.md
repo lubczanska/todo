@@ -21,7 +21,7 @@ $ python3 tudu.py
 ## Usage
 
 ```console
-$ todo --help
+$ tudu --help
 
 usage: tudu [-h] [--quiet]
                {add,rm,edit,check,uncheck,sticky,ls,show} ...
@@ -47,7 +47,19 @@ If no command is specified tui mode will be opened. In tui mode
 press ':' to enter commands
 
 ```
-
+#### EXAMPLES
+Add a weekly reminder to water plants by sunday
+```console
+$ tudu add "My list" "Water plants" --deadline sunday --priority 1 --repeat 7
+```
+Edit a typo in task name
+```console
+$ tudu edit "My list" "Task with a tpyo in name" --name "Task with no typo in name"
+```
+Remove "My list"
+```console
+$ tudu rm "My list"
+```
 ### TUI mode
 
 ##### WARNING
