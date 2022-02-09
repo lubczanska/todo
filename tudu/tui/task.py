@@ -1,6 +1,4 @@
-"""
-Displaying task mode
-"""
+"""Displaying task mode"""
 import curses
 import textwrap
 
@@ -22,14 +20,14 @@ HIGH = 9
 
 
 def display_task(screen, task, verbose, center: bool, color: int):
-    """
-    Main task mode display function
+    """ Main task mode display function
 
     :param task: Task model object
     :param verbose: If True information about priority and repeat will be shown
     :param center: If True text will be displayed in the center of the terminal
     :param color: Color of task username, 0 if terminal default, color number + 1 otherwise
     """
+
     stdscr = screen.stdscr
     info = util.task_info_str(task)
     note = textwrap.wrap(info[3], width=40) if info[3] else ''
@@ -37,8 +35,8 @@ def display_task(screen, task, verbose, center: bool, color: int):
         note_len = len(note) + 2 if info[3] else 0
         prio_len = 2 if verbose else 0
         deadline_len = 2 if task.deadline else 0
-        x_offset = (screen.w - (len(info[0])+8)) // 2
-        y_offset = (screen.h - (2+note_len+prio_len+deadline_len) + 1) // 2
+        x_offset = (screen.w - (len(info[0]) + 8)) // 2
+        y_offset = (screen.h - (2 + note_len + prio_len + deadline_len) + 1) // 2
     else:
         x_offset = 2
         y_offset = 1
@@ -74,9 +72,7 @@ def display_task(screen, task, verbose, center: bool, color: int):
 
 
 def run_task(stdscr, task_name: str, list_name: str, center: bool, color: int | None = None):
-    """
-    Task view main loop
-    """
+    """ Task view main loop """
     app = ui.UI('task', list_name, util.get_username())
     screen = ui.Screen(stdscr, app)
 

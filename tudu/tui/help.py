@@ -1,6 +1,4 @@
-"""
-Generating and displaying help for tui mode
-"""
+"""Generating and displaying help for tui mode"""
 import curses
 
 import tudu.cli as cli

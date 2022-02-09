@@ -18,14 +18,13 @@ HIGH = 9
 
 
 class Screen:
-    """
-    Main terminal window class
-    """
+    """ Main terminal window class """
+
     def __init__(self, stdscr, app):
-        self.stdscr = stdscr                        # window object created by curses.initscr()
-        self.h, self.w = self.stdscr.getmaxyx()     # terminal window dimensions
-        self.app = app                              # UI class object
-        self.prompt_history = ''                    # last prompt entry
+        self.stdscr = stdscr  # window object created by curses.initscr()
+        self.h, self.w = self.stdscr.getmaxyx()  # terminal window dimensions
+        self.app = app  # UI class object
+        self.prompt_history = ''  # last prompt entry
         setup_curses()
 
     def resize(self):
@@ -45,14 +44,15 @@ class Screen:
         self.stdscr.refresh()
 
     def prompt(self, x, message, attr=None):
-        """
-        Print text in the prompt area
+        """Print text in the prompt area
+
         Called only from the prompt module
 
         :param x: x coordinate of message start
         :param message: text to be displayed
         :param attr: styling attributes
         """
+
         try:
             if attr is None:
                 self.stdscr.addstr(self.h - 1, x + 1, message)
@@ -79,16 +79,16 @@ class Screen:
 
 def setup_curses():
     """ Initial setup of the curses library """
-    curses.curs_set(0)           # turn off cursor blinking
-    curses.noecho()              # don't display key presses
+    curses.curs_set(0)  # turn off cursor blinking
+    curses.noecho()  # don't display key presses
     curses.use_default_colors()  # if the terminal doesn't support 256 color mode problems may arise
     # 1-8 system colors on default background
     # 0 - terminal default
     # 9 - black on white
     curses.init_pair(1, curses.COLOR_BLACK, -1)
-    curses.init_pair(2, curses.COLOR_RED, -1)       # missed deadline
-    curses.init_pair(3, curses.COLOR_GREEN, -1)     # completed tasks
-    curses.init_pair(4, curses.COLOR_YELLOW, -1)    # deadline today
+    curses.init_pair(2, curses.COLOR_RED, -1)  # missed deadline
+    curses.init_pair(3, curses.COLOR_GREEN, -1)  # completed tasks
+    curses.init_pair(4, curses.COLOR_YELLOW, -1)  # deadline today
     curses.init_pair(5, curses.COLOR_BLUE, -1)
     curses.init_pair(6, curses.COLOR_MAGENTA, -1)
     curses.init_pair(7, curses.COLOR_CYAN, -1)
@@ -97,8 +97,7 @@ def setup_curses():
 
 
 def print_list_row(stdscr, task, y, x, max_name, verbose=False, color=DEF):
-    """
-    Print one menu entry in list mode
+    """ Print one menu entry in list mode
 
     :param task: Task model object
     :param y: y coordinate
@@ -107,6 +106,7 @@ def print_list_row(stdscr, task, y, x, max_name, verbose=False, color=DEF):
     :param verbose: If True show priority and repeat information
     :param color: Color of the text (default/highlight)
     """
+
     color2 = GREEN if color == DEF else HIGH
     item = util.task_info_str(task)
     line = f']  {item[0]:<{max_name}}'
@@ -140,8 +140,7 @@ def print_list_row(stdscr, task, y, x, max_name, verbose=False, color=DEF):
 
 
 def print_menu_row(stdscr, item, y, x, max_name, color=DEF):
-    """
-    Print one menu entry in main mode
+    """ Print one menu entry in main mode
 
     :param item: Array of list username, # of tasks, # of completed tasks
     :param y: y coordinate
@@ -149,26 +148,26 @@ def print_menu_row(stdscr, item, y, x, max_name, color=DEF):
     :param max_name: Length of the longest entry
     :param color: Color of the text (default/highlight)
     """
+
     line = f'{item[0]:<{max_name}}  [{item[2]}/{item[1]}]'
     stdscr.addstr(y, x, line, curses.color_pair(color))
 
 
 class UI:
-    """
-    Class for managing tui display in main and list modes
-    """
-    def __init__(self, mode: str, list_name: str, username: str):
-        self.menu_title = None      # text to be displayed above menu
-        self.items_length = 0       # # of entries in menu
-        self.items = None           # menu entries
-        self.task_summary = None    # task missed, due today or this week tuple
-        self.prompt = None          # contents of the prompt area
+    """ Class for managing tui display in main and list modes """
 
-        self.mode = mode            # main/list/listv
+    def __init__(self, mode: str, list_name: str, username: str):
+        self.menu_title = None  # text to be displayed above menu
+        self.items_length = 0  # # of entries in menu
+        self.items = None  # menu entries
+        self.task_summary = None  # task missed, due today or this week tuple
+        self.prompt = None  # contents of the prompt area
+
+        self.mode = mode  # main/list/listv
         self.list_name = list_name  # username of the list for list mode
-        self.modified = True        # True if db may have been modified
-        self.name = username        # Name of user to be displayed in welcome message
-        self.current_row = 0        # highlighted row
+        self.modified = True  # True if db may have been modified
+        self.name = username  # Name of user to be displayed in welcome message
+        self.current_row = 0  # highlighted row
         self.update_data()
         self.list_finished = False  # True if last task on the list has just been checked
 
@@ -198,8 +197,10 @@ class UI:
 
     def welcome_message(self, screen: Screen):
         """ Print the totally encouraging welcome message """
+
         def is_too_much(x):
             return f'{x:>2}' if x <= 99 else 'a lot of'
+
         x_offset = 3
         y_offset = 2
         stdscr = screen.stdscr
@@ -238,7 +239,7 @@ class UI:
 
             if self.mode == 'main':
                 max_name = max(max((len(item[0]) for item in self.items)), 30)
-                for idx, item in enumerate(self.items[start_idx:end_idx+1]):
+                for idx, item in enumerate(self.items[start_idx:end_idx + 1]):
                     if idx + start_idx == self.current_row:
                         print_menu_row(screen.stdscr, item, y, x, max_name, HIGH)
                     else:
@@ -247,7 +248,7 @@ class UI:
             else:
                 max_name = max(max((len(item.name) for item in self.items)) + 1, 30)
                 verbose = self.mode == 'listv'
-                for idx, item in enumerate(self.items[start_idx:end_idx+1]):
+                for idx, item in enumerate(self.items[start_idx:end_idx + 1]):
                     if idx + start_idx == self.current_row:
                         print_list_row(screen.stdscr, item, y, x, max_name, verbose, HIGH)
                     else:

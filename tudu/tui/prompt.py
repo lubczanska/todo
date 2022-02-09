@@ -1,7 +1,4 @@
-"""
-Displaying text in command prompt area and handling command prompt input
-"""
-
+""" Displaying text in command prompt area and handling command prompt input """
 import curses
 
 import tudu.exception as exception
@@ -20,8 +17,8 @@ HIGH = 9
 
 
 def commandline(screen: ui.Screen, prompt=':', startbuf='') -> str:
-    """
-    Collect and display text entered by the user.
+    """Collect and display text entered by the user.
+
     Currently supported keys (working as expected):
     ESC, ENTER, DEL, BACKSPACE, LEFT and RIGHT arrow keys.
     UP and DOWN arrows circle between current and last input
@@ -30,6 +27,7 @@ def commandline(screen: ui.Screen, prompt=':', startbuf='') -> str:
     :param startbuf: starting contents of the buffer
     :return: text entered by the user
     """
+
     # the default curses textbox uses some weird emacs keybindings,
     # so I wrote a custom one
     curses.curs_set(True)
@@ -103,11 +101,11 @@ def error_prompt(screen, message: str):
 
 
 def regular_prompt(screen, message: str, color=None):
-    """
-    Display a text message in the prompt area
+    """ Display a text message in the prompt area
 
     :param color: color of the message, if None default text color is used
     """
+
     colors = [BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE]
     color = 0 if color is None else colors[color]
     screen.clear_prompt()

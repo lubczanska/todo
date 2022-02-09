@@ -1,7 +1,4 @@
-"""
-Main display module.
-"""
-
+"""Main display module"""
 import curses
 import os
 
@@ -16,11 +13,11 @@ import tudu.util as util
 
 
 def command_mode(screen: ui.Screen, starting_buffer: str = ''):
-    """
-    Handle command mode. Parse user input and display assist mode, help or exceptions if necessary
+    """ Handle command mode. Parse user input and display assist mode, help or exceptions if necessary
 
     :param starting_buffer: Initial input
     """
+
     db_modified = False
     try:
         user_input = prompt.commandline(screen, startbuf=starting_buffer)
@@ -42,7 +39,7 @@ def command_mode(screen: ui.Screen, starting_buffer: str = ''):
                 if key == curses.KEY_UP and row > 0:
                     row -= 1
                     help_ui.print_help(screen.stdscr, help_msg)
-                if key == curses.KEY_DOWN and row < screen.h-3:
+                if key == curses.KEY_DOWN and row < screen.h - 3:
                     row += 1
                     help_ui.print_help(screen.stdscr, help_msg)
                 key = screen.stdscr.getch()
@@ -69,10 +66,7 @@ def command_mode(screen: ui.Screen, starting_buffer: str = ''):
 
 
 def run_curses(stdscr, mode: str, list_name: str | None):
-    """
-    Main loop for main and list modes. Initialize UI and screen objects, then handle user interaction.
-
-    """
+    """Main loop for main and list modes. Initialize UI and screen objects, then handle user interaction."""
     app = ui.UI(mode, list_name, util.get_username())
     screen = ui.Screen(stdscr, app)
 
@@ -81,13 +75,13 @@ def run_curses(stdscr, mode: str, list_name: str | None):
     while key != ord('q'):
         key = screen.stdscr.getch()
 
-        if key == curses.KEY_UP:
-            app.go_up()
-        elif key == curses.KEY_DOWN:
-            app.go_down()
-        elif key == curses.KEY_LEFT:
+        if key in [curses.KEY_LEFT, ord('h')]:
             app.go_left()
-        elif key == curses.KEY_RIGHT:
+        elif key in [curses.KEY_DOWN, ord('j')]:
+            app.go_down()
+        elif key in [curses.KEY_UP, ord('k')]:
+            app.go_up()
+        elif key in [curses.KEY_RIGHT, ord('l')]:
             app.go_right()
         elif key == curses.KEY_ENTER or key in [10, 13]:
             if app.mode == 'main':
@@ -150,4 +144,3 @@ def run(mode='main', list_name=None, task_name=None, center=False, color=None):
         curses.wrapper(task.run_task, task_name, list_name, center, color)
     else:
         curses.wrapper(run_curses, mode, list_name)
-

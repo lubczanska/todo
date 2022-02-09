@@ -1,5 +1,4 @@
 """ Interacting with the database """
-
 from datetime import datetime
 
 import tudu.exception as exception
@@ -10,10 +9,12 @@ from tudu.model import Task, List
 
 def add_task(task_name: str, list_name: str, deadline: datetime | None, notes: str | None,
              repeat: int | None, priority: int = 0):
-    """
-    Add new task to the database. Raise exception if task with task_name exists on list_name.
+    """Add new task to the database.
+
+    Raise exception if task with task_name exists on list_name.
     Validate priority
     """
+
     list_id = session.query(List.id).filter_by(name=list_name).first()
     if list_id is not None:
         if session.query(Task).join(List).filter(Task.name == task_name, List.name == list_name).first() is not None:
@@ -81,7 +82,7 @@ def edit_task(task_name: str, list_name: str, changes):
         raise exception.NoTaskError
     for (key, value) in changes.items():
         if key == 'username' and session.query(Task).join(List).filter(Task.name == key,
-                                                                   List.name == list_name).first() is not None:
+                                                                       List.name == list_name).first() is not None:
             raise exception.DuplicateTaskError
         task[key] = value
     # abort changes if new values are incorrect
@@ -156,13 +157,12 @@ def session_quit():
 
 
 def manage_deadlines(quiet):
-    """
-    Create lists of missed tasks and tasks requiring notification
-    and move deadlines of all missed repeating tasks
+    """ Create lists of missed tasks and tasks requiring notification, move deadlines of all missed repeating tasks
 
     :param quiet: only repeating tasks are managed, nothing else is modified, nothing is returned
     :return: Lists of missed and due for a notification Task objects
     """
+
     tasks = session.query(Task).all()
     missed = []  # tasks with deadlines missed since last time
     notify = []  # tuples of tasks with due notifications and days left until deadline

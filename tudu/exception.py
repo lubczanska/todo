@@ -1,11 +1,13 @@
 class DuplicateTaskError(Exception):
     """Raised when a task with same username and list already exists in the database"""
+
     def __str__(self):
         return 'There is already a task with this username on the list'
 
 
 class DuplicateListError(Exception):
     """Raised when a list with same username already exists in the database"""
+
     def __str__(self):
         return 'There is already a task with this username on the list'
 
@@ -33,12 +35,14 @@ class NoTaskError(Exception):
 
 class PriorityError(Exception):
     """Raised when the priority is not 0-3 or a priority is set with no deadline"""
+
     def __str__(self):
         return 'Priority needs to be an integer between 0 and 3. Priority > 0 requires a deadline'
 
 
 class ParsingError(Exception):
     """Raised by the parser"""
+
     def __init__(self, command, message):
         self.command = command
         self.message = message

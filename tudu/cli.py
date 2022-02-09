@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """ Parsing cli and tui command arguments, main and tui controller functions """
 import argparse
 import shlex
@@ -16,11 +17,7 @@ class NoHelpParser(argparse.ArgumentParser):
         raise ValueError(message)
 
 
-tui_parser = NoHelpParser(add_help=False, exit_on_error=False, prog="",
-                          epilog="enter [command] help for additional help about [command], "
-                                 "use arrow keys to get around, "
-                                 "check tasks with ENTER or SPACE, "
-                                 "in list mode press i for additional information about tasks")
+tui_parser = NoHelpParser(add_help=False, exit_on_error=False, prog="")
 tui_subparser = tui_parser.add_subparsers(dest='command', title='commands', parser_class=NoHelpParser)
 
 cli_parser = argparse.ArgumentParser(description='A simple to-do list app',
@@ -218,7 +215,16 @@ def get_help(command=None) -> str:
     elif command == 'show':
         return "Command unavailable in tui mode"
     else:
-        return tui_parser.format_help()
+        return f"{tui_parser.format_help()}\n\n" \
+               f"<command> help         additional help about <command>\n" \
+               f"<command>              enter assist mode for <command>\n\n" \
+               f"Use arrow keys or hjkl to navigate, Enter or Space to check tasks and q to quit\n\n" \
+               f"Other keybindings:\n" \
+               f":  open the command prompt, you can use `.` as name of the currently displayed list\n" \
+               f"a  start adding a list or a task to the currently displayed list\n" \
+               f"d  start deleting selected entry\n" \
+               f"e  start editing selected entry\n" \
+               f"i  show more information"
 
 
 def get_args(command: str) -> list[tuple[str, str]]:
@@ -257,7 +263,7 @@ def get_args(command: str) -> list[tuple[str, str]]:
     return arg_dict
 
 
-def main_controller():
+def main():
     """ Parse cli arguments """
     try:
         args = cli_parser.parse_args()
@@ -289,3 +295,7 @@ def tui_controller(text, list_name=None):
                 raise
     except Exception as e:
         raise exception.ParsingError(text, str(e))
+
+
+if __name__ == '__main__':
+    main()

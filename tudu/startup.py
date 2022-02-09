@@ -20,11 +20,11 @@ def notify_missed(missed_tasks):
 
 
 def startup(quiet=False):
-    """
-    Manage all needed notifications and edit repeating tasks. Called on tui mode startup
+    """ Manage all needed notifications and edit repeating tasks. Called on tui mode startup
 
-    :param quiet: no notifications will be sent or modified
+    :param quiet: If True no notifications will be sent or modified
     """
+
     missed, notify = manage_deadlines(quiet)
     if missed:
         notify_missed(missed)

@@ -1,4 +1,4 @@
-""" Utility functions used by other modules """
+"""Utility functions used by other modules"""
 import datetime
 import os
 import pwd
@@ -8,7 +8,7 @@ import tudu.exception as exception
 
 def add_s(word: str, number: int):
     """ Add s to the end of a word if necessary """
-    return word if number == 1 else word+'s'
+    return word if number == 1 else word + 's'
 
 
 def get_username():
@@ -70,7 +70,7 @@ def date_parser(date: str) -> datetime:
     else:
         days = {'mon': 0, 'tue': 1, 'wed': 2, 'thu': 3, 'fri': 4, 'sat': 5, 'sun': 6}
         if date[:3] in days.keys():
-            shift = days[date[:3]]-today.weekday()
+            shift = days[date[:3]] - today.weekday()
             if shift == 0:
                 shift = 7
             return today + datetime.timedelta(days=shift)
@@ -86,7 +86,7 @@ def date_parser(date: str) -> datetime:
                     parsed_date = datetime.datetime.strptime(date, fmt)
                     parsed_date = datetime.datetime(year=today.year, month=parsed_date.month, day=parsed_date.day)
                     if parsed_date < today:
-                        return datetime.datetime(year=today.year+1, month=parsed_date.month, day=parsed_date.day)
+                        return datetime.datetime(year=today.year + 1, month=parsed_date.month, day=parsed_date.day)
                     else:
                         return parsed_date
                 except ValueError:
@@ -95,13 +95,14 @@ def date_parser(date: str) -> datetime:
 
 
 def date_pprinter(date: datetime) -> (str, int):
-    """
-    Returns pretty string of date.
+    """Returns pretty string of date.
+
     2nd element of returned tuple meaning:
     0 - missed
     1 - not missed
     2 - today
     """
+
     today = datetime.datetime.today()
     delta = (date.date() - today.date()).days
     if delta == 0:
