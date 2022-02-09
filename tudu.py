@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from todo.cli import main_controller
+from tudu.cli import main_controller
 
 
 if __name__ == '__main__':

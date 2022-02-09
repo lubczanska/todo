@@ -1,6 +1,9 @@
+"""
+Generating and displaying help for tui mode
+"""
 import curses
 
-import todo.cli as cli
+import tudu.cli as cli
 
 HIGH = 9
 
@@ -17,11 +20,9 @@ def print_help(stdscr, help_msg):
     h, w = stdscr.getmaxyx()
     stdscr.clear()
     try:
-        stdscr.addstr(h-1, 1, ' press q to exit ', curses.color_pair(HIGH))
         stdscr.addstr(1, 1, help_msg)
     except Exception:
-        stdscr.addstr(h-1, 1, ' press q to exit ', curses.color_pair(HIGH))
-    stdscr.refresh()
-
-
-
+        pass
+    finally:
+        stdscr.addstr(h - 1, 1, ' press q to exit ', curses.color_pair(HIGH))
+        stdscr.refresh()

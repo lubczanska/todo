@@ -1,9 +1,11 @@
+""" Interacting with the database """
+
 from datetime import datetime
 
-from todo.model import Task, List
-from todo import session
-import todo.util as util
-import todo.exception as exception
+import tudu.exception as exception
+import tudu.util as util
+from tudu import session
+from tudu.model import Task, List
 
 
 def add_task(task_name: str, list_name: str, deadline: datetime | None, notes: str | None,
@@ -42,7 +44,7 @@ def add_task(task_name: str, list_name: str, deadline: datetime | None, notes: s
 
 
 def add_list(list_name: str):
-    """Add new list to the database. Check if name is unique"""
+    """ Add new list to the database. Check if name is unique """
     if session.query(List.id).filter_by(name=list_name).first() is not None:
         raise exception.DuplicateListError
         return
@@ -54,7 +56,7 @@ def add_list(list_name: str):
 
 
 def remove_task(task_name: str, list_name: str):
-    """Check if task exists. If yes, remove from database"""
+    """ Check if task exists. If yes, remove from database """
     lst = session.query(List).filter(List.name == list_name).first()
     if lst is None:
         raise exception.NoTaskError
@@ -63,6 +65,7 @@ def remove_task(task_name: str, list_name: str):
 
 
 def remove_list(list_name: str):
+    """ Remove list and its tasks """
     lst = session.query(List).filter(List.name == list_name).first()
     if lst is None:
         raise exception.NoTaskError
@@ -72,12 +75,12 @@ def remove_list(list_name: str):
 
 
 def edit_task(task_name: str, list_name: str, changes):
-    """Check if task exists. If yes, edit task details. Validate priority > 0 => deadline exists"""
+    """ Check if task exists. If yes, edit task details. Validate priority > 0 => deadline exists """
     task = session.query(Task).join(List).filter(List.name == list_name, Task.name == task_name).first()
     if task is None:
         raise exception.NoTaskError
     for (key, value) in changes.items():
-        if key == 'name' and session.query(Task).join(List).filter(Task.name == key,
+        if key == 'username' and session.query(Task).join(List).filter(Task.name == key,
                                                                    List.name == list_name).first() is not None:
             raise exception.DuplicateTaskError
         task[key] = value
@@ -88,7 +91,7 @@ def edit_task(task_name: str, list_name: str, changes):
 
 
 def rename_list(list_name: str, new_name: str):
-    """If list exists change its name to new_name"""
+    """ If list exists change its username to new_name """
     lst = session.query(List).filter(List.name == list_name).first()
     if lst is None:
         raise exception.NoTaskError
@@ -96,8 +99,8 @@ def rename_list(list_name: str, new_name: str):
     session.commit()
 
 
-def lists_info():
-    """Return info about number of all tasks and completed tasks for each list"""
+def lists_info() -> list[tuple[str, int, int]]:
+    """ Return info about number of all tasks and completed tasks for each list """
     lists = session.query(List).all()
     info = []
     for lst in lists:
@@ -107,7 +110,7 @@ def lists_info():
 
 
 def list_info(list_name: str):
-    """Return information about list if it exists"""
+    """ Return information about list if it exists """
     lst = session.query(List).filter(List.name == list_name).first()
     if lst is None:
         raise exception.NoTaskError
@@ -116,21 +119,21 @@ def list_info(list_name: str):
 
 
 def task_info(task_name: str, list_name: str):
-    """Return task if it exists"""
+    """ Return task if it exists """
     task = session.query(Task).join(List).filter(List.name == list_name, Task.name == task_name).first()
     if task is None:
         raise exception.NoTaskError
     return task
 
 
-def count_done(list_name: str):
-    """Count completed tasks on list_name"""
+def count_done(list_name: str) -> int:
+    """ Count completed tasks on list_name """
     count = session.query(Task).join(List).filter(Task.done, List.name == list_name).count()
     return count
 
 
 def welcome_tasks() -> tuple[int, int, int]:
-    """Return number of missed tasks and tasks due today and this week"""
+    """ Return number of missed tasks and tasks due today and this week """
     tasks = session.query(Task).all()
     missed = 0
     today = 0
@@ -154,10 +157,11 @@ def session_quit():
 
 def manage_deadlines(quiet):
     """
-    create lists of missed tasks and tasks requiring notification
-    and move deadline of all missed repeating tasks
+    Create lists of missed tasks and tasks requiring notification
+    and move deadlines of all missed repeating tasks
+
     :param quiet: only repeating tasks are managed, nothing else is modified, nothing is returned
-    :return:
+    :return: Lists of missed and due for a notification Task objects
     """
     tasks = session.query(Task).all()
     missed = []  # tasks with deadlines missed since last time
@@ -195,6 +199,7 @@ def manage_deadlines(quiet):
 
 
 def debug():
+    """ Display all items on the database """
     lists = session.query(List).all()
     tasks = session.query(Task).all()
     print('LISTS:')

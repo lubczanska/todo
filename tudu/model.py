@@ -1,10 +1,11 @@
-import sqlalchemy
+""" Database models """
 import datetime
+
+from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Table, Column, Integer, ForeignKey, String, DateTime, Boolean
 from sqlalchemy.orm import relationship, validates
-from sqlalchemy import func
-import todo.exception as exception
+
+import tudu.exception as exception
 
 Base = declarative_base()
 
@@ -33,12 +34,12 @@ class Task(Base):
     notify = Column(DateTime, default=None)
     notes = Column(String(70))
 
-    @validates('name')
+    @validates('username')
     def validate_name(self, key, value):
         if value is None:
-            raise ValueError('Task name not provided')
+            raise ValueError('Task username not provided')
         elif len(value) > 45:
-            raise ValueError('Task name too long')
+            raise ValueError('Task username too long')
         return value
 
     @validates('notes')
@@ -84,9 +85,9 @@ class List(Base):
     name = Column(String(45))
     task_ids = relationship('Task')
 
-    @validates('name')
+    @validates('username')
     def validate_name(self, key, value):
-        """ Check if name is not too long or reserved """
+        """ Check if username is not too long or reserved """
         banned_names = ['.']
         if value is None:
             raise ValueError
@@ -94,7 +95,7 @@ class List(Base):
             raise ValueError('Name too long')
         elif value in banned_names:
             # . reserved for accessing current list in tui mode
-            raise ValueError('This is not a valid name for a list')
+            raise ValueError('This is not a valid username for a list')
         return value
 
     def __init__(self, name: str):

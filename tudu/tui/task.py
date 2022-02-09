@@ -1,10 +1,13 @@
-import todo.tui.ui as ui
+"""
+Displaying task mode
+"""
 import curses
 import textwrap
-import todo.data_controllers as data
-import todo.exception as exception
-import todo.util as util
-import todo.tui.prompt as prompt
+
+import tudu.data_controllers as data
+import tudu.tui.prompt as prompt
+import tudu.tui.ui as ui
+import tudu.util as util
 
 DEF = 0
 BLACK = 1
@@ -20,7 +23,12 @@ HIGH = 9
 
 def display_task(screen, task, verbose, center: bool, color: int):
     """
-    Display information about a task
+    Main task mode display function
+
+    :param task: Task model object
+    :param verbose: If True information about priority and repeat will be shown
+    :param center: If True text will be displayed in the center of the terminal
+    :param color: Color of task username, 0 if terminal default, color number + 1 otherwise
     """
     stdscr = screen.stdscr
     info = util.task_info_str(task)

@@ -1,2 +1,19 @@
-python_projekt.md
-todo-tasks.db
+tudu-tasks.db
+
+.idea/
+__pycache__/
+
+build/
+dist/
+wheels/
+share/python-wheels/
+.installed.cfg
+MANIFEST
+
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Sphinx documentation
+docs/_build/

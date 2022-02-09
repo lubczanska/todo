@@ -1,14 +1,14 @@
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.sql.ddl import CreateTable
-from sqlalchemy.exc import OperationalError
+""" Initialize database and session """
 import os
-from todo.model import Task, List, Base
-from sqlalchemy import create_engine
 
+from sqlalchemy import MetaData
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from tudu.model import Task, List, Base
 
 # where the db will be created
-db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'todo-tasks.db')
+db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'tudu-tasks.db')
 if not os.path.isfile(db_path):
     print(f'Creating a new database at {db_path}')
 engine = create_engine(f'sqlite:///{db_path}')  # echo=True for debug

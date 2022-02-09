@@ -1,12 +1,13 @@
+""" Utility functions used by other modules """
 import datetime
 import os
 import pwd
 
-import todo.exception as exception
+import tudu.exception as exception
 
 
 def add_s(word: str, number: int):
-    """Add s to the end of a word if necessary"""
+    """ Add s to the end of a word if necessary """
     return word if number == 1 else word+'s'
 
 
@@ -15,14 +16,15 @@ def get_username():
 
 
 def task_info_str(task) -> tuple[str, str, tuple[str, bool], str, int]:
-    """Format task information for printing"""
+    """ Format task information for printing """
     done = '✓' if task.done else ' '
     deadline = date_pprinter(task.deadline) if task.deadline else ('', False)
     notes = task.notes if task.notes else ''
     return task.name, done, deadline, notes, task.priority
 
 
-def calculate_notification(task):
+def calculate_notification(task) -> datetime:
+    """ Calculate time of the next notification """
     if task.priority == 3:
         time = datetime.datetime.today() + datetime.timedelta(1)
     elif task.priority == 2:
@@ -39,7 +41,7 @@ def date_add_days(delta: int, date: datetime = datetime.datetime.today()) -> dat
 
 
 def time_until_date(date: datetime) -> int:
-    """Returns days until date"""
+    """ Returns days until date """
     if date is None:
         return 1000000000  # maybe not the smartest way to do it, but whatever
     today = datetime.datetime.today()
@@ -48,6 +50,7 @@ def time_until_date(date: datetime) -> int:
 
 
 def time_to_notify(date: datetime) -> bool:
+    """ Is it time to send a notification yet? """
     if not date:
         return False
     today = datetime.datetime.today()
@@ -56,9 +59,7 @@ def time_to_notify(date: datetime) -> bool:
 
 
 def date_parser(date: str) -> datetime:
-    """
-    Parse user input date to datetime format
-    """
+    """ Parse user input date to datetime format """
     today = datetime.datetime.today()
     if date == 'today':
         return today
@@ -80,7 +81,7 @@ def date_parser(date: str) -> datetime:
                 except ValueError:
                     pass
             for fmt in ['%d/%m', '%d-%m', '%d.%m', '%d-%m']:
-                # auto set year as year to current or next
+                # auto set as nearest date in the future
                 try:
                     parsed_date = datetime.datetime.strptime(date, fmt)
                     parsed_date = datetime.datetime(year=today.year, month=parsed_date.month, day=parsed_date.day)
@@ -117,4 +118,7 @@ def date_pprinter(date: datetime) -> (str, int):
         if missed:
             return f'{-delta} days ago', 1
         else:
-            return date.strftime('%d %b %Y'), 0
+            if date.year != today.year:
+                return date.strftime('%d %b %Y'), 0
+            else:
+                return date.strftime('%d %b'), 0

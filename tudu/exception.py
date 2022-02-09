@@ -1,13 +1,13 @@
 class DuplicateTaskError(Exception):
-    """Raised when a task with same name and list already exists in the database"""
+    """Raised when a task with same username and list already exists in the database"""
     def __str__(self):
-        return 'There is already a task with this name on the list'
+        return 'There is already a task with this username on the list'
 
 
 class DuplicateListError(Exception):
-    """Raised when a list with same name already exists in the database"""
+    """Raised when a list with same username already exists in the database"""
     def __str__(self):
-        return 'There is already a task with this name on the list'
+        return 'There is already a task with this username on the list'
 
 
 class IllegalCommandError(Exception):

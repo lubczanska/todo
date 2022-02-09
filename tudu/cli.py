@@ -1,15 +1,17 @@
+""" Parsing cli and tui command arguments, main and tui controller functions """
 import argparse
 import shlex
 
-import todo.exception as exception
-import todo.tui.tui as tui
-import todo.data_controllers as data
-from todo.startup import startup
-from todo.util import date_parser
+import tudu.data_controllers as data
+import tudu.exception as exception
+import tudu.startup as startup
+import tudu.tui.tui as tui
+import tudu.util as util
 
 
 class NoHelpParser(argparse.ArgumentParser):
-    """parser that doesn't automatically print help message on error"""
+    """ ArgumentParser that doesn't automatically print help message on error """
+
     def error(self, message: str):
         raise ValueError(message)
 
@@ -21,14 +23,12 @@ tui_parser = NoHelpParser(add_help=False, exit_on_error=False, prog="",
                                  "in list mode press i for additional information about tasks")
 tui_subparser = tui_parser.add_subparsers(dest='command', title='commands', parser_class=NoHelpParser)
 
-
 cli_parser = argparse.ArgumentParser(description='A simple to-do list app',
                                      epilog="If no command is specified tui mode will be opened.\n\n"
                                             "In tui mode press ':' to enter commands")
 cli_parser.add_argument('--quiet', '-q', action='store_true',
                         help='run tui without triggering notifications')
-cli_parser.add_argument('--debug', '-d', action='store_true',
-                        help='print out database contents')
+# cli_parser.add_argument('--debug', '-d', action='store_true', help='print out database contents')
 cli_subparser = cli_parser.add_subparsers(dest='command', title='commands')
 
 
@@ -37,7 +37,7 @@ def parse_add(args):
     if not args.TASKS:
         data.add_list(args.LIST)
     else:
-        deadline = date_parser(args.deadline) if args.deadline else None
+        deadline = util.date_parser(args.deadline) if args.deadline else None
         priority = args.priority if args.priority else 0
         repeat = args.repeat if args.repeat else None
         notes = args.notes if args.notes else None
@@ -66,9 +66,9 @@ def parse_edit(args):
         data.rename_list(args.LIST, args.name)
     else:
         args_vars = vars(args)
-        changes = {arg: args_vars[arg] for arg in ['name', 'priority', 'notes', 'repeat'] if args_vars[arg]}
+        changes = {arg: args_vars[arg] for arg in ['username', 'priority', 'notes', 'repeat'] if args_vars[arg]}
         if args.deadline:
-            changes['deadline'] = date_parser(args.deadline)
+            changes['deadline'] = util.date_parser(args.deadline)
         for task in args.TASKS:
             data.edit_task(task, args.LIST, changes)
 
@@ -86,7 +86,7 @@ def parse_uncheck(args):
 def parse_ls(args):
     if not args.LIST:
         # print names of all lists
-        for item in data.lists_info():  # returns name, # of tasks tuple
+        for item in data.lists_info():  # returns name, # of tasks, # of completed tasks tuple
             print(item[0])
     else:
         tui.run('list', args.LIST)
@@ -102,7 +102,7 @@ def parse_show(args):
 
 
 def add_subparsers(subparser):
-    """ add common subparsers to parser"""
+    """ Add common subparsers to parser """
     add = subparser.add_parser('add', exit_on_error=False, help='add new list or tasks')
     rm = subparser.add_parser('rm', exit_on_error=False, help='remove list or tasks')
     edit = subparser.add_parser('edit', exit_on_error=False, help='edit list/task details')
@@ -111,7 +111,7 @@ def add_subparsers(subparser):
     sticky = subparser.add_parser('sticky', exit_on_error=False, help='add task to startup list')
 
     add.add_argument('LIST', type=str,
-                     help="name of the list, will be created if it doesn't exist yet")
+                     help="username of the list, will be created if it doesn't exist yet")
     add.add_argument('TASKS', type=str, nargs='*',
                      help='names of tasks to be added, if no names are given an empty list will be added')
     add.add_argument('--deadline', type=str,
@@ -134,13 +134,13 @@ def add_subparsers(subparser):
     rm.set_defaults(func=parse_rm)
 
     edit.add_argument('LIST', type=str,
-                      help="name of the list")
+                      help="username of the list")
     edit.add_argument('TASKS', type=str, nargs='*',
                       help='names of tasks to receive changes, if no names are given the list can be renamed'
                            'and all the other flags are ignored')
-    edit.add_argument('--name', type=str,
-                      help='new name for list or tasks')
-    # edit.add_argument('--list', type=str, help='name of list where tasks should be moved')
+    edit.add_argument('--username', type=str,
+                      help='new username for list or tasks')
+    # edit.add_argument('--list', type=str, help='username of list where tasks should be moved') <- disabled rn
     edit.add_argument('--deadline', type=str,
                       help="possible values: 'today', 'tomorrow', 'yesterday', string with first 3 letters"
                            " matching a day of the week, date in dd/mm/YYYY or dd/mm format (other separators:"
@@ -164,17 +164,17 @@ def add_subparsers(subparser):
     uncheck.add_argument('TASKS', type=str, nargs='+')
     uncheck.set_defaults(func=parse_uncheck)
     sticky.add_argument('TASKS', type=str, nargs='*',
-                     help='names of tasks to be added')
+                        help='names of tasks to be added')
     sticky.add_argument('--deadline', type=str,
-                     help="possible values: 'today', 'tomorrow', day of the week, date in dd/mm/YYYY format")
+                        help="possible values: 'today', 'tomorrow', day of the week, date in dd/mm/YYYY format")
     sticky.add_argument('--priority', type=int,
-                     help='controls the amount of notifications (if > 0 a deadline is needed):'
-                          ' 0) none'
-                          ' 1) 1 day before deadline'
-                          ' 2) a week before deadline'
-                          ' 3) every time the app is opened')
+                        help='controls the amount of notifications (if > 0 a deadline is needed):'
+                             ' 0) none'
+                             ' 1) 1 day before deadline'
+                             ' 2) a week before deadline'
+                             ' 3) every time the app is opened')
     sticky.add_argument('--repeat', type=int,
-                     help='the task will repeat REPEAT days after deadline (deadline needed)')
+                        help='the task will repeat REPEAT days after deadline (deadline needed)')
     sticky.add_argument('--notes', type=str)
     sticky.set_defaults(func=parse_sticky)
     return add, rm, edit, check, uncheck, sticky
@@ -188,19 +188,19 @@ ls = cli_subparser.add_parser('ls', help='display all tasks in a list in tui mod
 show = cli_subparser.add_parser('show', help='display task details')
 
 ls.add_argument('LIST', type=str, nargs='?',
-                help='name of list to display, if no list is given all lists will be printed instead')
+                help='username of list to display, if no list is given all lists will be printed instead')
 ls.set_defaults(func=parse_ls)
 
 show.add_argument('LIST', type=str)
 show.add_argument('TASK', type=str, nargs='?',
-                  help='name of task to display, if no list is given all task on LIST will be printed instead')
+                  help='username of task to display, if no list is given all task on LIST will be printed instead')
 show.add_argument('--center', '-c', action='store_true', help='display task at the center of the terminal')
 show.add_argument('--color', '-C', type=int, help='set task color [0-7]')
 show.set_defaults(func=parse_show)
 
 
 def get_help(command=None) -> str:
-    """"Return help message for tui help command"""
+    """" Return help message for tui help command """
     if command == 'add':
         return tui_add.format_help()
     elif command == 'rm':
@@ -211,6 +211,8 @@ def get_help(command=None) -> str:
         return tui_check.format_help()
     elif command == 'uncheck':
         return tui_uncheck.format_help()
+    elif command == 'sticky':
+        return tui_sticky.format_help()
     elif command == 'ls':
         return "Command unavailable in tui mode"
     elif command == 'show':
@@ -219,7 +221,8 @@ def get_help(command=None) -> str:
         return tui_parser.format_help()
 
 
-def get_args(command):
+def get_args(command: str) -> list[tuple[str, str]]:
+    """ Return dict of subparser attributes and pretty prompts for them """
     arg_dict = []
     if command == 'add':
         arg_dict = [('', 'List: '),
@@ -234,7 +237,7 @@ def get_args(command):
     elif command == 'edit':
         arg_dict = [('', 'List: '),
                     ('', 'Tasks: '),
-                    ('--name', 'Name: '),
+                    ('--username', 'Name: '),
                     ('--deadline', 'Deadline: '),
                     ('--priority', 'Priority: '),
                     ('--repeat', 'Repeat: '),
@@ -255,16 +258,15 @@ def get_args(command):
 
 
 def main_controller():
+    """ Parse cli arguments """
     try:
         args = cli_parser.parse_args()
         if args.command:
             args.func(args)
-            data.session_quit()
-        elif args.debug:
-            data.debug()
-            data.session_quit()
+        # elif args.debug:
+        #     data.debug()
         else:
-            startup(args.quiet)
+            startup.startup(args.quiet)
             tui.run()
     except Exception as e:
         print(str(e))
@@ -273,6 +275,7 @@ def main_controller():
 
 
 def tui_controller(text, list_name=None):
+    """ Manage parsing for tui command mode """
     try:
         args = tui_parser.parse_args(shlex.split(text))
         if args.command in [None, 'ls', 'show']:

@@ -1,24 +1,29 @@
+"""
+Main display module.
+"""
+
 import curses
 import os
 
-import todo.cli as cli
-import todo.data_controllers as data
-import todo.exception as exception
-import todo.tui.help as help_ui
-import todo.tui.prompt as prompt
-import todo.tui.task as task
-import todo.tui.ui as ui
-import todo.util as util
+import tudu.cli as cli
+import tudu.data_controllers as data
+import tudu.exception as exception
+import tudu.tui.help as help_ui
+import tudu.tui.prompt as prompt
+import tudu.tui.task as task
+import tudu.tui.ui as ui
+import tudu.util as util
 
 
-def command_mode(screen: ui.Screen, startbuf=''):
+def command_mode(screen: ui.Screen, starting_buffer: str = ''):
     """
-    Display command prompt then read and parse user input;
-    display help message if requested or parsing errors
+    Handle command mode. Parse user input and display assist mode, help or exceptions if necessary
+
+    :param starting_buffer: Initial input
     """
     db_modified = False
     try:
-        user_input = prompt.commandline(screen, startbuf=startbuf)
+        user_input = prompt.commandline(screen, startbuf=starting_buffer)
         if not user_input:
             curses.curs_set(False)
             return
@@ -42,8 +47,8 @@ def command_mode(screen: ui.Screen, startbuf=''):
                     help_ui.print_help(screen.stdscr, help_msg)
                 key = screen.stdscr.getch()
             return
-        elif user_input in ['add', 'rm', 'edit', 'check', 'uncheck']:
-            # Assist mode that prompts possible task attributes
+        elif user_input in ['add', 'rm', 'edit', 'check', 'uncheck', 'sticky']:
+            # Assist mode that prompts for possible task attributes, then glue together user_input
             args = cli.get_args(user_input)
             for tag, arg_prompt in args:
                 arg_input = prompt.commandline(screen, arg_prompt)
@@ -65,9 +70,9 @@ def command_mode(screen: ui.Screen, startbuf=''):
 
 def run_curses(stdscr, mode: str, list_name: str | None):
     """
-    Main loop
-    """
+    Main loop for main and list modes. Initialize UI and screen objects, then handle user interaction.
 
+    """
     app = ui.UI(mode, list_name, util.get_username())
     screen = ui.Screen(stdscr, app)
 
@@ -111,11 +116,10 @@ def run_curses(stdscr, mode: str, list_name: str | None):
                 app.modified = True
         elif key == ord('d'):
             # ask if user wants to delete entry
-            screen.display_wrapper(prompt.error_prompt, 'Delete? [y/N]')
-            key = screen.stdscr.getch()
-            if key == ord('y'):
-                app.delete_entry()
-            screen.clear_prompt()
+            buf = f"rm '{app.get_selected()}' " if app.mode == 'main' else f"rm . '{app.get_selected()}' "
+            if screen.display_wrapper(command_mode, buf):
+                # user entered a valid command, modifying the database
+                app.modified = True
         elif key == curses.KEY_RESIZE:
             # handle window resize
             screen.resize()
@@ -123,14 +127,15 @@ def run_curses(stdscr, mode: str, list_name: str | None):
         screen.display_wrapper(app.redraw)
 
         if app.list_finished:
-            #  if the last task has been checked display a congratulations message
-            #  and offer to delete the list
-            screen.display_wrapper(prompt.error_prompt, 'Well done! Would you like to delete this list now?  [y/N]')
+            # if the last task on the list has been checked
+            # display a congratulations message  and offer to delete the list
+            screen.display_wrapper(prompt.regular_prompt,
+                                   'Well done! Would you like to delete this list now?  [y/N]', 2)
             key = screen.stdscr.getch()
             if key == ord('y'):
                 data.remove_list(app.list_name)
                 app.go_left()
-                # app.modified != True, because all go_left called app.get_items
+                # app.modified != True, because app.go_left called app.get_items
                 # and all tasks are done, so welcome message won't change
             screen.clear_prompt()
             screen.display_wrapper(app.redraw)
@@ -138,6 +143,7 @@ def run_curses(stdscr, mode: str, list_name: str | None):
 
 
 def run(mode='main', list_name=None, task_name=None, center=False, color=None):
+    """ Running tui in selected mode """
     os.environ.setdefault("ESCDELAY", "25")
     stdscr = curses.initscr()
     if mode == 'task':
