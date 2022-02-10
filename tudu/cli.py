@@ -20,11 +20,12 @@ class NoHelpParser(argparse.ArgumentParser):
 tui_parser = NoHelpParser(add_help=False, exit_on_error=False, prog="")
 tui_subparser = tui_parser.add_subparsers(dest='command', title='commands', parser_class=NoHelpParser)
 
-cli_parser = argparse.ArgumentParser(description='A simple to-do list app',
-                                     epilog="If no command is specified tui mode will be opened.\n\n"
+cli_parser = argparse.ArgumentParser(description='A simple app for managing your to-do lists',
+                                     epilog="Try <command> -h for additional help. "
+                                            "If no command is specified tui mode will be opened. "
                                             "In tui mode press ':' to enter commands")
 cli_parser.add_argument('--quiet', '-q', action='store_true',
-                        help='run tui without triggering notifications')
+                        help='Run tui without triggering notifications')
 # cli_parser.add_argument('--debug', '-d', action='store_true', help='print out database contents')
 cli_subparser = cli_parser.add_subparsers(dest='command', title='commands')
 
@@ -100,11 +101,11 @@ def parse_show(args):
 
 def add_subparsers(subparser):
     """ Add common subparsers to parser """
-    add = subparser.add_parser('add', exit_on_error=False, help='add new list or tasks')
-    rm = subparser.add_parser('rm', exit_on_error=False, help='remove list or tasks')
+    add = subparser.add_parser('add', exit_on_error=False, help='add new list/tasks')
+    rm = subparser.add_parser('rm', exit_on_error=False, help='remove list/tasks')
     edit = subparser.add_parser('edit', exit_on_error=False, help='edit list/task details')
-    check = subparser.add_parser('check', exit_on_error=False, help='mark task as completed')
-    uncheck = subparser.add_parser('uncheck', exit_on_error=False, help='mark task as not completed')
+    check = subparser.add_parser('check', exit_on_error=False, help='check task')
+    uncheck = subparser.add_parser('uncheck', exit_on_error=False, help='uncheck task')
     sticky = subparser.add_parser('sticky', exit_on_error=False, help='add task to startup list')
 
     add.add_argument('LIST', type=str,
@@ -181,16 +182,16 @@ tui_add, tui_rm, tui_edit, tui_check, tui_uncheck, tui_sticky = add_subparsers(t
 add, rm, edit, check, uncheck, sticky = add_subparsers(cli_subparser)
 
 # subparsers only for cli mode
-ls = cli_subparser.add_parser('ls', help='display all tasks in a list in tui mode')
+ls = cli_subparser.add_parser('ls', help='display list in tui mode')
 show = cli_subparser.add_parser('show', help='display task details')
 
 ls.add_argument('LIST', type=str, nargs='?',
-                help='username of list to display, if no list is given all lists will be printed instead')
+                help='name of list to display, if no list is given all lists will be printed instead')
 ls.set_defaults(func=parse_ls)
 
 show.add_argument('LIST', type=str)
 show.add_argument('TASK', type=str, nargs='?',
-                  help='username of task to display, if no list is given all task on LIST will be printed instead')
+                  help='name of task to display, if no list is given all task on LIST will be printed instead')
 show.add_argument('--center', '-c', action='store_true', help='display task at the center of the terminal')
 show.add_argument('--color', '-C', type=int, help='set task color [0-7]')
 show.set_defaults(func=parse_show)
