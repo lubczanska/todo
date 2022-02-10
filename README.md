@@ -2,20 +2,11 @@
 
 `tudu` is a simple command line tool with a tui mode for managing your to-do lists
 
-#### Used libraries:
-
-- `sqlalchemy`  : database
-- `curses`      : TUI
-- `plyer`       : notifications
-
-The documentation has been generated using `Sphinx`
-
-[link to github](https://github.com/lubczanska/tudu)
 ## Installation
 
 #### pip
 
-```console
+```
 # pip3 install tudu
 ```
 #### use locally
@@ -62,19 +53,22 @@ press ':' to enter commands
 ```
 #### EXAMPLES
 
-```console
+```bash
 # Add a weekly reminder to water plants by sunday
 $ tudu add "My list" "Water plants" --deadline sunday --priority 1 --repeat 7
 
-# Edit a typo in task name
+# Edit a typo
 $ tudu edit "My list" "Task with a tpyo in name" --name "Task with no typo in name"
+
+# Change deadline of a project
+$ tudu edit "Project" "Final version" "Presentation" --deadline monday
 
 # Remove "My list"
 $ tudu rm "My list"
 ```
 If you want to see tasks or lists without opening the tui mode:
-```console
-# See all lists in the database
+```bash
+# See all lists
 $ tudu ls
 
 # See all tasks on "My list"
@@ -82,20 +76,21 @@ $ tudu show "My list"
 ```
 ----
 ### Task mode
-```console
-$ tudu show [-h] [--center] [--color COLOR] LIST [TASK]
+```bash
+# Show task "Water plants" centered and in blue
+$ tudu show "My list" "Water plants" -cC 4
 ```
-Task mode displays a task in a tui mode that allows you to check the task with `Space`, display more information with `i` or delete it with `d`
+Task mode displays a task in tui mode that allows you to check the task with `Space`, display more information with `i` or delete it with `d`
  
 `--center` flag centers the text in the terminal and `--color COLOR` changes task name color to the specified color [0-7]
 
 -----
 ### TUI mode
-```console
-# Shows all lists in tui mode
+```bash
+# See all lists (tui mode)
 $ tudu
 
-# Shows "My list" in tui mode
+# See all tasks on "My list" (tui mode)
 $ ls "My list"
 ```
 
@@ -104,11 +99,13 @@ Use arrow keys or `h` `j` `k` `l` to navigate, `Enter` or `Space` to check tasks
 
 Other keybindings:
 
-| `:` | open the command prompt |
+| Key | Action                                                        |
+| --- |---------------------------------------------------------------|
+| `:` | open the command prompt                                       |
 |`a`  | Start adding a list or a task to the currently displayed list |
-|`d`  | Start deleting selected entry |
-|`e`  | Start editing selected entry |
-|`i`  | Show more information |
+|`d`  | Start deleting selected entry                                 |
+|`e`  | Start editing selected entry                                  |
+|`i`  | Show more information                                         |
 
 #### Commands in TUI mode
 
