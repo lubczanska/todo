@@ -34,7 +34,7 @@ A simple to-do list app
 
 options:
   -h, --help            show this help message and exit
-  --quiet, -q           run tui without triggering notifications
+  -q, --quiet          run tui without triggering notifications
 
 commands:
   {add,rm,edit,check,uncheck,sticky,ls,show}
@@ -51,6 +51,26 @@ If no command is specified tui mode will be opened. In tui mode
 press ':' to enter commands
 
 ```
+#### Task model attributes
+- `list`: name of the list task is on, max 45 characters
+- `name`: task name, max 45 characters
+- `notes`: string displayed after pressing `i` in tui mode, max 75 characters
+- `deadline`:
+  - None (deafult)
+  - `today`
+  - `tomorrow`
+  - `yesterday`
+  - `<day of the week>` (lowercase string matching at least 3 letters, e.g. "mon")
+  - `dd/mm/yyyy` other separators: `-` `,` `.`
+  - `dd/mm` separators as above, nearest future matching date will be chosen
+- `priority`:
+  - 0: no notifications except when missed (default)
+  - 1: notification 1 day before deadline
+  - 2: notification 1 week before deadline, then 1 day before
+  - 3: notification every time `tudu` is opened
+- `repeat`: repeat interval in days (default = 0)
+
+Positive `repeat` and `priority` require a deadline
 #### EXAMPLES
 
 ```bash
@@ -93,7 +113,7 @@ $ tudu
 # See all tasks on "My list" (tui mode)
 $ ls "My list"
 ```
-
+Opening TUI mode will trigger notifications unless flag `-q` is set
 #### Navigation
 Use arrow keys or `h` `j` `k` `l` to navigate, `Enter` or `Space` to check tasks and `q` to quit
 

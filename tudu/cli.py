@@ -24,7 +24,7 @@ cli_parser = argparse.ArgumentParser(description='A simple app for managing your
                                      epilog="Try <command> -h for additional help. "
                                             "If no command is specified tui mode will be opened. "
                                             "In tui mode press ':' to enter commands")
-cli_parser.add_argument('--quiet', '-q', action='store_true',
+cli_parser.add_argument('-q', '--quiet', action='store_true',
                         help='Run tui without triggering notifications')
 # cli_parser.add_argument('--debug', '-d', action='store_true', help='print out database contents')
 cli_subparser = cli_parser.add_subparsers(dest='command', title='commands')
@@ -192,8 +192,8 @@ ls.set_defaults(func=parse_ls)
 show.add_argument('LIST', type=str)
 show.add_argument('TASK', type=str, nargs='?',
                   help='name of task to display, if no list is given all task on LIST will be printed instead')
-show.add_argument('--center', '-c', action='store_true', help='display task at the center of the terminal')
-show.add_argument('--color', '-C', type=int, help='set task color [0-7]')
+show.add_argument('-c, --center', action='store_true', help='display task at the center of the terminal')
+show.add_argument('-C, --color', type=int, help='set task color [0-7]')
 show.set_defaults(func=parse_show)
 
 
