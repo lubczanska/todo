@@ -2,6 +2,15 @@
 
 `tudu` is a simple command line tool with a tui mode for managing your to-do lists
 
+#### Used libraries:
+
+- `sqlalchemy`  : database
+- `curses`      : TUI
+- `plyer`       : notifications
+
+The documentation has been generated using `Sphinx`
+
+[link to github](https://github.com/lubczanska/tudu)
 ## Installation
 
 #### pip
@@ -9,14 +18,18 @@
 ```console
 # pip3 install tudu
 ```
-#### locally
+#### use locally
 
-You will need to have `SQLAlchemy` and `plyer` packages installed
+You will need to have `sqlalchemy` and `plyer` packages installed
 ```
 $ git clone https://github.com/lubczanska/tudu
 $ cd tudu
 $ python3 tudu.py
 ```  
+
+-----
+
+`dbus-python` is a dependency of `plyer` that doesn't get automatically installed by pip. The app works without it, but will display warnings
 
 ## Usage
 
@@ -48,30 +61,66 @@ press ':' to enter commands
 
 ```
 #### EXAMPLES
-Add a weekly reminder to water plants by sunday
+
 ```console
+# Add a weekly reminder to water plants by sunday
 $ tudu add "My list" "Water plants" --deadline sunday --priority 1 --repeat 7
-```
-Edit a typo in task name
-```console
+
+# Edit a typo in task name
 $ tudu edit "My list" "Task with a tpyo in name" --name "Task with no typo in name"
-```
-Remove "My list"
-```console
+
+# Remove "My list"
 $ tudu rm "My list"
 ```
-### TUI mode
+If you want to see tasks or lists without opening the tui mode:
+```console
+# See all lists in the database
+$ tudu ls
 
-##### WARNING
-Resizing the terminal may lead to visual bugs, especially when entering characters or viewing help.
-In that situation resize the terminal properly
+# See all tasks on "My list"
+$ tudu show "My list"
+```
+----
+### Task mode
+```console
+$ tudu show [-h] [--center] [--color COLOR] LIST [TASK]
+```
+Task mode displays a task in a tui mode that allows you to check the task with `Space`, display more information with `i` or delete it with `d`
+ 
+`--center` flag centers the text in the terminal and `--color COLOR` changes task name color to the specified color [0-7]
+
+-----
+### TUI mode
+```console
+# Shows all lists in tui mode
+$ tudu
+
+# Shows "My list" in tui mode
+$ ls "My list"
+```
 
 #### Navigation
 Use arrow keys or `h` `j` `k` `l` to navigate, `Enter` or `Space` to check tasks and `q` to quit
 
 Other keybindings:
-- `:` open the command prompt, that supports all cli commands except `ls` and `show`. Additionally, when executing commands like `add` you can use `.` as name of the currently displayed list or type `help` `--help` or `-h` for tui-specific help
-- `a` Start adding a list or a task to the currently displayed list
-- `d` Start deleting selected entry
-- `e` Start editing selected entry
-- `i` Show more information
+
+| `:` | open the command prompt |
+|`a`  | Start adding a list or a task to the currently displayed list |
+|`d`  | Start deleting selected entry |
+|`e`  | Start editing selected entry |
+|`i`  | Show more information |
+
+#### Commands in TUI mode
+
+Press `:` to enter command mode normally or `a` `d` or `e` to have it filled with the begging of the corresponding command.
+
+Type `help` `--help` or `-h` for tui-specific help or `<command> help` for help about a specific command.
+
+`ls` and `show` are unavailable in TUI mode
+
+`<command>`  triggers assist mode, where you will be prompted for further arguments. Be sure to escape all spaces or wrap the text in quotes.
+
+When displaying a list you can use `.` to denote it in commands instead of writing the name
+_____
+##### WARNING
+A small or unexpectedly resized terminal window may cause the content to not display as intended. In that situation simply resize the terminal to appropriate dimensions.

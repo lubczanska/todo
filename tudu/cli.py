@@ -281,7 +281,7 @@ def main():
         data.session_quit()
 
 
-def tui_controller(text, list_name=None):
+def tui_controller(text: str, list_name: str = None):
     """ Manage parsing for tui command mode """
     try:
         args = tui_parser.parse_args(shlex.split(text))
